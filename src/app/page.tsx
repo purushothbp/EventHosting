@@ -17,7 +17,7 @@ import { Search } from 'lucide-react';
 
 export default function Home() {
   const [events, setEvents] = useState<Event[]>(allEvents);
-  const [college, setCollege] = useState('all');
+  const [organization, setOrganization] = useState('all');
   const [department, setDepartment] = useState('all');
   const [eventType, setEventType] = useState('all');
   const [isFree, setIsFree] = useState(false);
@@ -26,8 +26,8 @@ export default function Home() {
   React.useEffect(() => {
     let filteredEvents = allEvents;
 
-    if (college !== 'all') {
-      filteredEvents = filteredEvents.filter((e) => e.college === college);
+    if (organization !== 'all') {
+      filteredEvents = filteredEvents.filter((e) => e.organization === organization);
     }
     if (department !== 'all') {
       filteredEvents = filteredEvents.filter((e) => e.department === department);
@@ -45,9 +45,9 @@ export default function Home() {
     }
 
     setEvents(filteredEvents);
-  }, [college, department, eventType, isFree, searchTerm]);
+  }, [organization, department, eventType, isFree, searchTerm]);
 
-  const uniqueColleges = ['all', ...Array.from(new Set(allEvents.map((e) => e.college)))];
+  const uniqueOrganizations = ['all', ...Array.from(new Set(allEvents.map((e) => e.organization)))];
   const uniqueDepartments = ['all', ...Array.from(new Set(allEvents.map((e) => e.department)))];
   const uniqueEventTypes = ['all', ...Array.from(new Set(allEvents.map((e) => e.type)))];
 
@@ -58,7 +58,7 @@ export default function Home() {
           Find Your Next Experience
         </h1>
         <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-          Discover workshops, competitions, and cultural events happening in your college.
+          Discover workshops, competitions, and cultural events happening across India.
         </p>
       </header>
 
@@ -73,14 +73,14 @@ export default function Home() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Select value={college} onValueChange={setCollege}>
+          <Select value={organization} onValueChange={setOrganization}>
             <SelectTrigger>
-              <SelectValue placeholder="Filter by College" />
+              <SelectValue placeholder="Filter by Organization" />
             </SelectTrigger>
             <SelectContent>
-              {uniqueColleges.map((c) => (
+              {uniqueOrganizations.map((c) => (
                 <SelectItem key={c} value={c}>
-                  {c === 'all' ? 'All Colleges' : c}
+                  {c === 'all' ? 'All Organizations' : c}
                 </SelectItem>
               ))}
             </SelectContent>

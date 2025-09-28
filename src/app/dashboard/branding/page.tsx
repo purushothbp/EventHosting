@@ -23,7 +23,7 @@ export default function BrandingPage() {
     toast({
       title: 'Branding Updated!',
       description:
-        'Your college branding information has been saved successfully.',
+        'Your organization branding information has been saved successfully.',
     });
     // In a real app, this would handle file uploads and form data.
   };
@@ -33,10 +33,10 @@ export default function BrandingPage() {
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="font-headline text-4xl font-bold">
-            College Branding
+            Organization Branding
           </h1>
           <p className="text-lg text-muted-foreground">
-            Manage your college's logo, watermark, and other branding details.
+            Manage your organization's logo, watermark, and other branding details.
           </p>
         </div>
 
@@ -44,7 +44,7 @@ export default function BrandingPage() {
           <div className="grid gap-8">
             <Card>
               <CardHeader>
-                <CardTitle>College Logo & Name</CardTitle>
+                <CardTitle>Organization Logo & Name</CardTitle>
                 <CardDescription>
                   This will be displayed on event pages and certificates.
                 </CardDescription>
@@ -52,28 +52,28 @@ export default function BrandingPage() {
               <CardContent className="grid md:grid-cols-2 gap-6 items-start">
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="college-name">College Name</Label>
+                    <Label htmlFor="organization-name">Organization Name</Label>
                     <Input
-                      id="college-name"
-                      defaultValue="Tech University"
+                      id="organization-name"
+                      defaultValue="Tech Corp"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="college-tagline">Tagline (Optional)</Label>
+                    <Label htmlFor="organization-tagline">Tagline (Optional)</Label>
                     <Input
-                      id="college-tagline"
+                      id="organization-tagline"
                       placeholder="e.g., 'Excellence in Technology'"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>College Logo (Mandatory)</Label>
+                  <Label>Organization Logo (Mandatory)</Label>
                   <div className="flex items-center gap-4">
                     <div className="w-24 h-24 rounded-md border flex items-center justify-center bg-muted">
                       <Image
                         src="https://picsum.photos/seed/college-logo/100/100"
-                        alt="College Logo"
+                        alt="Organization Logo"
                         width={96}
                         height={96}
                         className="rounded-sm object-contain"
@@ -118,7 +118,7 @@ export default function BrandingPage() {
               <CardHeader>
                 <CardTitle>Department Logos</CardTitle>
                 <CardDescription>
-                  Upload logos for specific departments within your college (e.g., Computer Science, Mechanical).
+                  Upload logos for specific departments within your organization (e.g., Computer Science, Mechanical).
                 </CardDescription>
               </CardHeader>
               <CardContent>

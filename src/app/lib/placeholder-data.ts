@@ -3,7 +3,7 @@ export type Event = {
   title: string;
   date: string;
   location: string;
-  college: string;
+  organization: string;
   department: string;
   type: 'Workshop' | 'Seminar' | 'Competition' | 'Cultural';
   isFree: boolean;
@@ -19,7 +19,7 @@ export const events: Event[] = [
     title: 'AI & Machine Learning Workshop',
     date: '2024-09-15',
     location: 'Auditorium A',
-    college: 'Tech University',
+    organization: 'Tech Corp',
     department: 'Computer Science',
     type: 'Workshop',
     isFree: false,
@@ -33,11 +33,11 @@ export const events: Event[] = [
     title: 'Melody Night',
     date: '2024-09-20',
     location: 'Open Air Theatre',
-    college: 'Arts & Science College',
+    organization: 'Art & Culture Foundation',
     department: 'All Departments',
     type: 'Cultural',
     isFree: true,
-    description: 'An evening of beautiful music from talented student artists. Come and enjoy the vibe.',
+    description: 'An evening of beautiful music from talented artists. Come and enjoy the vibe.',
     organizer: 'Music Society',
     image: 'event-2',
   },
@@ -46,7 +46,7 @@ export const events: Event[] = [
     title: 'Hackathon 2024',
     date: '2024-10-01',
     location: 'Innovation Hub',
-    college: 'Tech University',
+    organization: 'Tech Corp',
     department: 'All Departments',
     type: 'Competition',
     isFree: true,
@@ -59,7 +59,7 @@ export const events: Event[] = [
     title: 'Startup Success Seminar',
     date: '2024-10-05',
     location: 'Conference Hall',
-    college: 'Business School',
+    organization: 'Business Hub',
     department: 'Management',
     type: 'Seminar',
     isFree: false,
@@ -73,7 +73,7 @@ export const events: Event[] = [
     title: 'Intro to Robotics',
     date: '2024-10-12',
     location: 'Robotics Lab',
-    college: 'Tech University',
+    organization: 'Tech Corp',
     department: 'Mechanical Engineering',
     type: 'Workshop',
     isFree: false,
@@ -87,11 +87,11 @@ export const events: Event[] = [
     title: 'Nexus Fest 2024',
     date: '2024-10-25',
     location: 'Main Campus',
-    college: 'Arts & Science College',
+    organization: 'Art & Culture Foundation',
     department: 'All Departments',
     type: 'Cultural',
     isFree: true,
-    description: 'The biggest annual cultural festival of the college. Featuring celebrity performances, food stalls, and games.',
+    description: 'The biggest annual cultural festival of the city. Featuring celebrity performances, food stalls, and games.',
     organizer: 'Student Council',
     image: 'event-6',
   },
@@ -100,7 +100,7 @@ export const events: Event[] = [
     title: 'Climate Action Talk',
     date: '2024-11-02',
     location: 'Eco Center',
-    college: 'Business School',
+    organization: 'Business Hub',
     department: 'Environmental Science',
     type: 'Seminar',
     isFree: true,
@@ -113,11 +113,11 @@ export const events: Event[] = [
     title: 'Shutterbug Photography Contest',
     date: '2024-11-10',
     location: 'Online Submission',
-    college: 'Arts & Science College',
+    organization: 'Art & Culture Foundation',
     department: 'All Departments',
     type: 'Competition',
     isFree: true,
-    description: 'Capture the beauty of our campus. Submit your best shots and win exciting prizes.',
+    description: 'Capture the beauty of our city. Submit your best shots and win exciting prizes.',
     organizer: 'Photography Club',
     image: 'event-8',
   },
@@ -126,7 +126,7 @@ export const events: Event[] = [
 export type UserProfile = {
   name: string;
   email: string;
-  college: string;
+  organization: string;
   department: string;
   year: number;
   interests: string[];
@@ -135,7 +135,7 @@ export type UserProfile = {
 export const userProfile: UserProfile = {
   name: 'Alex Doe',
   email: 'alex.doe@example.com',
-  college: 'Tech University',
+  organization: 'Tech Corp',
   department: 'Computer Science',
   year: 3,
   interests: ['Coding', 'AI', 'Music', 'Startups'],

@@ -133,7 +133,7 @@ export default function EventDetailsPage() {
                   <Tag className="h-5 w-5 mr-3 text-primary" />
                   <div className="flex flex-wrap gap-2">
                     <Badge variant="secondary">{event.type}</Badge>
-                    <Badge variant="secondary">{event.college}</Badge>
+                    <Badge variant="secondary">{event.organization}</Badge>
                     <Badge variant="secondary">{event.department}</Badge>
                   </div>
                 </div>
@@ -189,7 +189,7 @@ export default function EventDetailsPage() {
                   <CheckCircle className="text-green-500 mr-2 h-6 w-6" /> Booking Successful!
                 </DialogTitle>
                 <DialogDescription>
-                  Here is your digital ticket. Show this QR code at the event entrance. A watermark from the college will be on the final certificate.
+                  Here is your digital ticket. Show this QR code at the event entrance. A watermark from the organization will be on the final certificate.
                 </DialogDescription>
               </DialogHeader>
               <div className="flex flex-col items-center justify-center p-8 bg-muted rounded-lg">

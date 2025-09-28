@@ -34,7 +34,7 @@ export default function ProfilePage() {
       description: `Your certificate for "${eventName}" will be downloaded shortly.`,
     });
     // In a real app, this would trigger a PDF generation service.
-    // The college logo and watermark would be included here.
+    // The organization logo and watermark would be included here.
   };
 
   const handleHistoryDownload = (format: 'CSV' | 'PDF') => {
@@ -50,7 +50,7 @@ export default function ProfilePage() {
     const updatedProfile = {
       ...profile,
       name: formData.get('name') as string,
-      college: formData.get('college') as string,
+      organization: formData.get('organization') as string,
       department: formData.get('department') as string,
     }
     setProfile(updatedProfile);
@@ -93,8 +93,8 @@ export default function ProfilePage() {
                         <Input id="name" name="name" defaultValue={profile.name} />
                     </div>
                      <div>
-                        <Label htmlFor="college">College</Label>
-                        <Input id="college" name="college" defaultValue={profile.college} />
+                        <Label htmlFor="organization">Organization</Label>
+                        <Input id="organization" name="organization" defaultValue={profile.organization} />
                     </div>
                      <div>
                         <Label htmlFor="department">Department</Label>
@@ -171,8 +171,8 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="flex items-center">
-                    <strong className="w-32">College:</strong>
-                    <span>{profile.college}</span>
+                    <strong className="w-32">Organization:</strong>
+                    <span>{profile.organization}</span>
                 </div>
                  <div className="flex items-center">
                     <strong className="w-32">Department:</strong>
