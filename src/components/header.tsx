@@ -19,6 +19,7 @@ import {
   User,
   LogOut,
   Home,
+  Building,
 } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
@@ -79,6 +80,13 @@ export default function Header() {
                       <span>{link.label}</span>
                     </Link>
                   ))}
+                  <Link
+                      href="/dashboard/branding"
+                      className="flex items-center space-x-2 rounded-md p-2 text-foreground/70 transition-colors hover:text-foreground"
+                    >
+                      <Building className="h-5 w-5" />
+                      <span>Branding</span>
+                    </Link>
                 </div>
               </SheetContent>
             </Sheet>
@@ -116,6 +124,12 @@ export default function Header() {
                 <Link href="/dashboard">
                   <LayoutDashboard className="mr-2 h-4 w-4" />
                   <span>Dashboard</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/branding">
+                  <Building className="mr-2 h-4 w-4" />
+                  <span>Branding</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
