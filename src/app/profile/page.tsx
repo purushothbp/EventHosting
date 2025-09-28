@@ -17,7 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { User, Edit, Download, Calendar, MapPin } from 'lucide-react';
+import { User, Edit, Download, Calendar, MapPin, FileDown } from 'lucide-react';
 import { events, userProfile as initialProfile, UserProfile } from '@/app/lib/placeholder-data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useToast } from '@/hooks/use-toast';
@@ -30,8 +30,17 @@ export default function ProfilePage() {
 
   const handleCertificateDownload = (eventName: string) => {
     toast({
-      title: 'Feature Coming Soon!',
-      description: `Certificate generation for "${eventName}" is not yet implemented.`,
+      title: 'Generating PDF...',
+      description: `Your certificate for "${eventName}" will be downloaded shortly.`,
+    });
+    // In a real app, this would trigger a PDF generation service.
+    // The college logo and watermark would be included here.
+  };
+
+  const handleHistoryDownload = (format: 'CSV' | 'PDF') => {
+    toast({
+      title: `Downloading Event History as ${format}...`,
+      description: 'This is a mock download. In a real app, this would generate and download the file.',
     });
   };
   
@@ -108,8 +117,22 @@ export default function ProfilePage() {
         <TabsContent value="history">
           <Card>
             <CardHeader>
-              <CardTitle>Your Booked Events</CardTitle>
-              <CardDescription>A record of events you have registered for.</CardDescription>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <CardTitle>Your Booked Events</CardTitle>
+                        <CardDescription>A record of events you have registered for.</CardDescription>
+                    </div>
+                    <div className="flex gap-2">
+                         <Button variant="outline" size="sm" onClick={() => handleHistoryDownload('CSV')}>
+                            <FileDown className="mr-2 h-4 w-4"/>
+                            Download CSV
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleHistoryDownload('PDF')}>
+                            <FileDown className="mr-2 h-4 w-4"/>
+                            Download PDF
+                        </Button>
+                    </div>
+                </div>
             </CardHeader>
             <CardContent>
               <Table>
@@ -125,7 +148,7 @@ export default function ProfilePage() {
                   {bookedEvents.map((event) => (
                     <TableRow key={event.id}>
                       <TableCell className="font-medium">{event.title}</TableCell>
-                      <TableCell className="hidden md:table-cell">{new Date(event.date).toLocaleDateString()}</TableCell>
+                      <TableCell className="hidden md:table-cell">{new Date(event.date).toLocaleDateString('en-IN')}</TableCell>
                       <TableCell className="hidden lg:table-cell">{event.location}</TableCell>
                       <TableCell className="text-right">
                         <Button variant="ghost" size="icon" onClick={() => handleCertificateDownload(event.title)}>

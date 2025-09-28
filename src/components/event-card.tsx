@@ -42,7 +42,7 @@ export function EventCard({ event }: EventCardProps) {
                 event.isFree ? 'bg-green-500' : 'bg-primary'
               )}
             >
-              {event.isFree ? 'Free' : `$${event.price}`}
+              {event.isFree ? 'Free' : `₹${event.price}`}
             </Badge>
           </div>
         </Link>
@@ -59,7 +59,7 @@ export function EventCard({ event }: EventCardProps) {
         <div className="text-sm text-muted-foreground space-y-2">
           <div className="flex items-center">
             <Calendar className="h-4 w-4 mr-2" />
-            <span>{eventDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+            <span>{eventDate.toLocaleDateString('en-IN', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
           </div>
           <div className="flex items-center">
             <MapPin className="h-4 w-4 mr-2" />

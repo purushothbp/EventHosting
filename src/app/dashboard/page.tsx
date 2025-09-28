@@ -27,7 +27,7 @@ import {
   BarChart,
   PlusCircle,
   Users,
-  DollarSign,
+  IndianRupee,
   Edit,
   Trash2,
 } from 'lucide-react';
@@ -128,7 +128,7 @@ export default function DashboardPage() {
                   {organizerEvents.map((event) => (
                     <TableRow key={event.id}>
                       <TableCell className="font-medium">{event.title}</TableCell>
-                      <TableCell>{new Date(event.date).toLocaleDateString()}</TableCell>
+                      <TableCell>{new Date(event.date).toLocaleDateString('en-IN')}</TableCell>
                       <TableCell>{Math.floor(Math.random() * 200) + 50}</TableCell>
                       <TableCell className="text-right">
                         <Button variant="ghost" size="icon"><Edit className="h-4 w-4" /></Button>
@@ -146,10 +146,10 @@ export default function DashboardPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <IndianRupee className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">$4,231.89</div>
+                <div className="text-2xl font-bold">₹3,52,450</div>
                 <p className="text-xs text-muted-foreground">+20.1% from last month</p>
               </CardContent>
             </Card>

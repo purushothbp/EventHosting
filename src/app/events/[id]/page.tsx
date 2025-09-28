@@ -110,16 +110,16 @@ export default function EventDetailsPage() {
                 className="w-full text-lg font-bold"
                 variant="destructive"
               >
-                {event.isFree ? 'Register for Free' : `Book for $${event.price}`}
+                {event.isFree ? 'Register for Free' : `Book for ₹${event.price}`}
               </Button>
               <div className="mt-6 space-y-4 text-muted-foreground">
                 <div className="flex items-center">
                   <Calendar className="h-5 w-5 mr-3 text-primary" />
-                  <span>{eventDate.toDateString()}</span>
+                  <span>{eventDate.toLocaleDateString('en-IN', { dateStyle: 'full' })}</span>
                 </div>
                 <div className="flex items-center">
                   <Clock className="h-5 w-5 mr-3 text-primary" />
-                  <span>Starts at 7:00 PM</span>
+                  <span>Starts at 7:00 PM (IST)</span>
                 </div>
                 <div className="flex items-center">
                   <MapPin className="h-5 w-5 mr-3 text-primary" />
@@ -154,9 +154,9 @@ export default function EventDetailsPage() {
                 </DialogDescription>
               </DialogHeader>
               <div>
-                <p><strong>Date:</strong> {eventDate.toDateString()}</p>
+                <p><strong>Date:</strong> {eventDate.toLocaleDateString('en-IN', { dateStyle: 'full' })}</p>
                 <p><strong>Location:</strong> {event.location}</p>
-                <p><strong>Price:</strong> {event.isFree ? 'Free' : `$${event.price}`}</p>
+                <p><strong>Price:</strong> {event.isFree ? 'Free' : `₹${event.price}`}</p>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsBookingOpen(false)}>Cancel</Button>
@@ -170,13 +170,13 @@ export default function EventDetailsPage() {
               <DialogHeader>
                 <DialogTitle>Complete Your Payment</DialogTitle>
                 <DialogDescription>
-                  Please complete the payment of ${event.price} to secure your ticket.
+                  Please complete the payment of ₹{event.price} to secure your ticket.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
-                <p>This is a mock payment screen. In a real application, a payment gateway like Stripe or UPI would be integrated here.</p>
+                <p>This is a mock payment screen. In a real application, a payment gateway like UPI would be integrated here.</p>
                 <Button onClick={handlePayment} className="w-full">
-                  <CreditCard className="mr-2 h-4 w-4" /> Pay ${event.price}
+                  <CreditCard className="mr-2 h-4 w-4" /> Pay ₹{event.price}
                 </Button>
               </div>
             </>
@@ -189,13 +189,13 @@ export default function EventDetailsPage() {
                   <CheckCircle className="text-green-500 mr-2 h-6 w-6" /> Booking Successful!
                 </DialogTitle>
                 <DialogDescription>
-                  Here is your digital ticket. Show this QR code at the event entrance.
+                  Here is your digital ticket. Show this QR code at the event entrance. A watermark from the college will be on the final certificate.
                 </DialogDescription>
               </DialogHeader>
               <div className="flex flex-col items-center justify-center p-8 bg-muted rounded-lg">
                 <QrCode className="h-48 w-48 text-foreground" />
                 <p className="mt-4 font-semibold text-lg">{event.title}</p>
-                <p className="text-sm text-muted-foreground">{eventDate.toDateString()}</p>
+                <p className="text-sm text-muted-foreground">{eventDate.toLocaleDateString('en-IN', { dateStyle: 'full' })}</p>
               </div>
               <DialogFooter>
                 <Button className="w-full" onClick={() => setIsBookingOpen(false)}>Done</Button>
