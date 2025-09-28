@@ -1,6 +1,6 @@
 # Application Structure and User Flow
 
-This document outlines the basic structure of the Nexus Events application and the intended user flows for different roles.
+This document outlines the basic structure of the Nexus Events application and the intended user flows for different roles. For details on data management, database connection (MongoDB), and file storage (S3), please see `docs/data-management.md`.
 
 ## 1. Roles
 
@@ -29,6 +29,7 @@ There are three main roles in this application:
     -   `placeholder-images.json`: Contains URLs for placeholder images used throughout the app.
 -   `/docs/`: Contains documentation.
     -   `flow.md`: This file.
+    -   `data-management.md`: Technical guide for database and file storage.
 
 ---
 
