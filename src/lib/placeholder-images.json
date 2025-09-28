@@ -1,3 +1,58 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "event-1",
+      "description": "A workshop on AI",
+      "imageUrl": "https://images.unsplash.com/photo-1580893195730-1282f408b0d9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHx0ZWNobm9sb2d5JTIwd29ya3Nob3B8ZW58MHx8fHwxNzU5MDY4NDcyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "technology workshop"
+    },
+    {
+      "id": "event-2",
+      "description": "A cultural music festival",
+      "imageUrl": "https://images.unsplash.com/photo-1658227633934-b589ca17d602?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxtdXNpYyUyMGZlc3RpdmFsfGVufDB8fHx8MTc1OTAyNDgzMHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "music festival"
+    },
+    {
+      "id": "event-3",
+      "description": "A programming competition",
+      "imageUrl": "https://images.unsplash.com/photo-1669023414180-4dcf35d943e1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxjb2RpbmclMjBjb21wdXRlcnxlbnwwfHx8fDE3NTg5Nzk0MTF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "coding computer"
+    },
+    {
+      "id": "event-4",
+      "description": "A seminar on entrepreneurship",
+      "imageUrl": "https://images.unsplash.com/photo-1531058020387-3be344556be6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxidXNpbmVzcyUyMGNvbmZlcmVuY2V8ZW58MHx8fHwxNzU5MDY4NDcyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "business conference"
+    },
+    {
+      "id": "event-5",
+      "description": "Robotics workshop",
+      "imageUrl": "https://images.unsplash.com/photo-1601132359864-c974e79890ac?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxyb2JvdCUyMHRlY2hub2xvZ3l8ZW58MHx8fHwxNzU5MDM3NTAzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "robot technology"
+    },
+    {
+      "id": "event-6",
+      "description": "Annual college fest",
+      "imageUrl": "https://images.unsplash.com/photo-1517456793572-1d8efd6dc135?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxjb2xsZWdlJTIwcGFydHl8ZW58MHx8fHwxNzU5MDY4NDcyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "college party"
+    },
+    {
+      "id": "event-7",
+      "description": "Guest lecture on climate change",
+      "imageUrl": "https://images.unsplash.com/photo-1635455458363-f155e407a123?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxuYXR1cmUlMjBlbnZpcm9ubWVudHxlbnwwfHx8fDE3NTkwNjg0NzJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "nature environment"
+    },
+    {
+      "id": "event-8",
+      "description": "Photography contest",
+      "imageUrl": "https://images.unsplash.com/photo-1615120678271-0bf784f73aeb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxjYW1lcmElMjBwaG90b3xlbnwwfHx8fDE3NTkwNjg0NzJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "camera photo"
+    },
+    {
+      "id": "user-avatar",
+      "description": "User profile picture",
+      "imageUrl": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxwZXJzb24lMjBwb3J0cmFpdHxlbnwwfHx8fDE3NTkwMTExOTN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person portrait"
+    }
+  ]
 }
