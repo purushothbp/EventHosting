@@ -25,20 +25,20 @@ export function EventCard({ event }: EventCardProps) {
     <Card className="flex flex-col overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 duration-300 ease-in-out">
       <CardHeader className="p-0">
         <Link href={`/events/${event.id}`} className="block">
-          <div className="relative h-48 w-full">
+          <div className="relative h-40 sm:h-48 w-full">
             {image && (
               <Image
                 src={image.imageUrl}
                 alt={event.title}
                 fill
                 className="object-cover"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
                 data-ai-hint={image.imageHint}
               />
             )}
             <Badge
               className={cn(
-                'absolute top-2 right-2',
+                'absolute top-2 right-2 text-xs sm:text-sm',
                 event.isFree ? 'bg-green-500' : 'bg-primary'
               )}
             >
@@ -47,30 +47,30 @@ export function EventCard({ event }: EventCardProps) {
           </div>
         </Link>
       </CardHeader>
-      <CardContent className="p-4 flex-grow">
+      <CardContent className="p-3 sm:p-4 flex-grow">
         <div className="flex justify-between items-start">
-            <Badge variant="secondary" className="mb-2">{event.type}</Badge>
+            <Badge variant="secondary" className="mb-2 text-xs sm:text-sm">{event.type}</Badge>
         </div>
-        <h3 className="font-headline text-lg font-semibold leading-tight mb-2 truncate">
+        <h3 className="font-headline text-base sm:text-lg font-semibold leading-tight mb-2 line-clamp-2">
           <Link href={`/events/${event.id}`} className="hover:text-primary">
             {event.title}
           </Link>
         </h3>
-        <div className="text-sm text-muted-foreground space-y-2">
+        <div className="text-xs sm:text-sm text-muted-foreground space-y-1 sm:space-y-2">
           <div className="flex items-center">
-            <Calendar className="h-4 w-4 mr-2" />
-            <span>{eventDate.toLocaleDateString('en-IN', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+            <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+            <span className="line-clamp-1">{eventDate.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
           </div>
           <div className="flex items-center">
-            <MapPin className="h-4 w-4 mr-2" />
-            <span>{event.location}</span>
+            <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
+            <span className="line-clamp-1">{event.location}</span>
           </div>
         </div>
       </CardContent>
-      <CardFooter className="p-4 pt-0">
-        <Button asChild className="w-full" variant="outline">
+      <CardFooter className="p-3 sm:p-4 pt-0">
+        <Button asChild className="w-full text-sm sm:text-base" variant="outline">
           <Link href={`/events/${event.id}`}>
-            View Details <ArrowRight className="ml-2 h-4 w-4" />
+            View Details <ArrowRight className="ml-2 h-3 w-3 sm:h-4 sm:w-4" />
           </Link>
         </Button>
       </CardFooter>

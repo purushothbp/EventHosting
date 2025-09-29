@@ -34,11 +34,11 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center">
+      <div className="flex px-2 md:px-4 h-14 sm:h-16 items-center">
         <div className="mr-4 hidden md:flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
-            <Activity className="h-6 w-6 text-primary" />
-            <span className="hidden font-bold sm:inline-block font-headline">
+            <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+            <span className="hidden font-bold sm:inline-block font-headline text-base sm:text-lg">
               Nexus Events
             </span>
           </Link>
@@ -55,37 +55,37 @@ export default function Header() {
           </nav>
         </div>
 
-        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+        <div className="flex flex-1 items-center justify-between px-0 md:px-2 md:justify-end">
           <div className="md:hidden">
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="h-9 w-9 sm:h-10 sm:w-10">
+                  <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
                   <span className="sr-only">Toggle Menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="pr-0">
-                <Link href="/" className="mr-6 flex items-center space-x-2">
-                  <Activity className="h-6 w-6 text-primary" />
-                  <span className="font-bold font-headline">Nexus Events</span>
+              <SheetContent side="left" className="pr-0 w-64 sm:w-80">
+                <Link href="/" className="mr-6 flex items-center space-x-2 mb-6">
+                  <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                  <span className="font-bold font-headline text-base sm:text-lg">Nexus Events</span>
                 </Link>
-                <div className="flex flex-col space-y-3 pt-6">
+                <div className="flex flex-col space-y-2 sm:space-y-3 pt-4 sm:pt-6">
                   {navLinks.map((link) => (
                     <Link
                       key={link.href}
                       href={link.href}
-                      className="flex items-center space-x-2 rounded-md p-2 text-foreground/70 transition-colors hover:text-foreground"
+                      className="flex items-center space-x-2 sm:space-x-3 rounded-md p-2 sm:p-3 text-foreground/70 transition-colors hover:text-foreground"
                     >
-                      <link.icon className="h-5 w-5" />
-                      <span>{link.label}</span>
+                      <link.icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                      <span className="text-sm sm:text-base">{link.label}</span>
                     </Link>
                   ))}
                   <Link
                       href="/dashboard/branding"
-                      className="flex items-center space-x-2 rounded-md p-2 text-foreground/70 transition-colors hover:text-foreground"
+                      className="flex items-center space-x-2 sm:space-x-3 rounded-md p-2 sm:p-3 text-foreground/70 transition-colors hover:text-foreground"
                     >
-                      <Building className="h-5 w-5" />
-                      <span>Branding</span>
+                      <Building className="h-4 w-4 sm:h-5 sm:w-5" />
+                      <span className="text-sm sm:text-base">Branding</span>
                     </Link>
                 </div>
               </SheetContent>
@@ -93,8 +93,8 @@ export default function Header() {
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-9 w-9">
+              <Button variant="ghost" className="relative h-8 w-8 sm:h-9 sm:w-9 rounded-full">
+                <Avatar className="h-8 w-8 sm:h-9 sm:w-9">
                   <AvatarImage
                     src={userAvatar?.imageUrl}
                     alt="User avatar"

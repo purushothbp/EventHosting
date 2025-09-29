@@ -52,19 +52,19 @@ export default function Home() {
   const uniqueEventTypes = ['all', ...Array.from(new Set(allEvents.map((e) => e.type)))];
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <header className="mb-12 text-center">
-        <h1 className="font-headline text-4xl md:text-5xl font-bold tracking-tight text-primary">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
+      <header className="mb-8 sm:mb-12 text-center">
+        <h1 className="font-headline text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-primary">
           Find Your Next Experience
         </h1>
-        <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
+        <p className="mt-3 sm:mt-4 max-w-2xl mx-auto text-base sm:text-lg text-muted-foreground">
           Discover workshops, competitions, and cultural events happening across India.
         </p>
       </header>
 
-      <div className="mb-8 p-4 bg-card rounded-lg shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-center">
-          <div className="relative lg:col-span-2">
+      <div className="mb-6 sm:mb-8 p-4 bg-card rounded-lg shadow-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-start">
+          <div className="relative sm:col-span-2 lg:col-span-2">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
               placeholder="Search for events..."
@@ -97,22 +97,22 @@ export default function Home() {
               ))}
             </SelectContent>
           </Select>
-          <div className="flex items-center space-x-2 justify-self-start md:justify-self-end">
+          <div className="flex items-center space-x-2 sm:justify-self-start md:justify-self-end">
             <Switch id="free-only" checked={isFree} onCheckedChange={setIsFree} />
-            <Label htmlFor="free-only">Free Events</Label>
+            <Label htmlFor="free-only" className="text-sm sm:text-base">Free Events</Label>
           </div>
         </div>
       </div>
 
       {events.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
           {events.map((event) => (
             <EventCard key={event.id} event={event} />
           ))}
         </div>
       ) : (
-        <div className="text-center py-16">
-          <p className="text-xl text-muted-foreground">No events match your filters.</p>
+        <div className="text-center py-12 sm:py-16">
+          <p className="text-lg sm:text-xl text-muted-foreground">No events match your filters.</p>
         </div>
       )}
     </div>
