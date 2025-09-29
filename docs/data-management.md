@@ -61,50 +61,176 @@ This application is designed to work with a NoSQL database. While the current ve
 
 ### b) Data Schemas (Mongoose)
 
-Using an ODM like Mongoose is highly recommended to enforce schema validation.
+Using an ODM like Mongoose is highly recommended to enforce schema validation. This section defines the structure for the main data models in the application.
 
 1.  **Install Mongoose**: `npm install mongoose`
 
 2.  **Define Schemas**:
-    Create files for your models, for example `src/models/Event.ts`.
+    Create files for your models in a new `src/models` directory.
 
-    **Event Schema**
+    ---
+    
+    #### **Event Schema**
+    *File: `src/models/Event.ts`*
+    
+    This schema defines all the details for an event. It links to an `Organization` and a `User` (the organizer).
+
     ```typescript
     // src/models/Event.ts
-    import mongoose, { Schema, Document, models, model } from 'mongoose';
+    import mongoose, { Schema, Document, models, model, Types } from 'mongoose';
 
     export interface IEvent extends Document {
+      _id: Types.ObjectId;
       title: string;
       date: Date;
       location: string;
-      organization: string; // Could be a reference to an Organization model
-      department?: string;
-      type: 'Workshop' | 'Seminar' | 'Competition' | 'Cultural';
+      description: string;
+      imageUrl: string; // URL from S3
       isFree: boolean;
       price?: number;
-      description: string;
-      organizer: string; // Could be a reference to a User model
-      imageUrl: string; // URL from S3
+      type: 'Workshop' | 'Seminar' | 'Competition' | 'Cultural';
+      organization: Types.ObjectId; // Reference to Organization
+      department?: string;
+      organizer: Types.ObjectId; // Reference to User
+      minTeamSize: number;
+      maxTeamSize: number;
+      createdAt: Date;
+      updatedAt: Date;
     }
 
     const EventSchema: Schema = new Schema({
       title: { type: String, required: true },
       date: { type: Date, required: true },
       location: { type: String, required: true },
-      organization: { type: String, required: true },
-      department: { type: String },
-      type: { type: String, required: true, enum: ['Workshop', 'Seminar', 'Competition', 'Cultural'] },
+      description: { type: String, required: true },
+      imageUrl: { type: String, required: true },
       isFree: { type: Boolean, default: false },
       price: { type: Number },
-      description: { type: String, required: true },
-      organizer: { type: String, required: true },
-      imageUrl: { type: String, required: true },
-    });
+      type: { type: String, required: true, enum: ['Workshop', 'Seminar', 'Competition', 'Cultural'] },
+      organization: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
+      department: { type: String },
+      organizer: { type: Schema.Types.ObjectId, ref: 'User', required: true }, // The admin/organizer who created it
+      minTeamSize: { type: Number, default: 1 },
+      maxTeamSize: { type: Number, default: 1 },
+    }, { timestamps: true });
 
     export default models.Event || model<IEvent>('Event', EventSchema);
     ```
 
-    You would then create similar schemas for `User`, `Organization`, `Booking`, etc.
+    ---
+
+    #### **User Schema**
+    *File: `src/models/User.ts`*
+
+    This schema stores information about individual users, including their role (attendee or organizer).
+
+    ```typescript
+    // src/models/User.ts
+    import mongoose, { Schema, Document, models, model, Types } from 'mongoose';
+
+    export interface IUser extends Document {
+      _id: Types.ObjectId;
+      clerkId: string; // Or any other auth provider ID
+      email: string;
+      name: string;
+      avatarUrl?: string;
+      organization: Types.ObjectId; // Reference to Organization
+      department?: string;
+      year?: number;
+      interests?: string[];
+      role: 'user' | 'admin';
+      createdAt: Date;
+      updatedAt: Date;
+    }
+
+    const UserSchema: Schema = new Schema({
+      clerkId: { type: String, required: true, unique: true },
+      email: { type: String, required: true, unique: true },
+      name: { type: String, required: true },
+      avatarUrl: { type: String },
+      organization: { type: Schema.Types.ObjectId, ref: 'Organization' },
+      department: { type: String },
+      year: { type: Number },
+      interests: [{ type: String }],
+      role: { type: String, default: 'user', enum: ['user', 'admin'] }
+    }, { timestamps: true });
+
+    export default models.User || model<IUser>('User', UserSchema);
+    ```
+
+    ---
+
+    #### **Organization Schema**
+    *File: `src/models/Organization.ts`*
+    
+    This schema holds branding and administrative information for each organization on the platform.
+
+    ```typescript
+    // src/models/Organization.ts
+    import mongoose, { Schema, Document, models, model, Types } from 'mongoose';
+
+    interface IDepartmentLogo {
+      departmentName: string;
+      logoUrl: string; // URL from S3
+    }
+    
+    export interface IOrganization extends Document {
+      _id: Types.ObjectId;
+      name: string;
+      tagline?: string;
+      logoUrl: string; // URL from S3
+      watermarkUrl?: string; // URL from S3
+      departmentLogos?: IDepartmentLogo[];
+      admins: Types.ObjectId[]; // List of user IDs who are admins for this org
+      createdAt: Date;
+      updatedAt: Date;
+    }
+
+    const OrganizationSchema: Schema = new Schema({
+      name: { type: String, required: true },
+      tagline: { type: String },
+      logoUrl: { type: String, required: true },
+      watermarkUrl: { type: String },
+      departmentLogos: [{
+        departmentName: String,
+        logoUrl: String,
+      }],
+      admins: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    }, { timestamps: true });
+
+    export default models.Organization || model<IOrganization>('Organization', OrganizationSchema);
+    ```
+
+    ---
+
+    #### **Booking Schema**
+    *File: `src/models/Booking.ts`*
+    
+    This schema links a `User` to an `Event` they have registered for, creating a booking record.
+
+    ```typescript
+    // src/models/Booking.ts
+    import mongoose, { Schema, Document, models, model, Types } from 'mongoose';
+
+    export interface IBooking extends Document {
+      _id: Types.ObjectId;
+      user: Types.ObjectId; // Reference to User
+      event: Types.ObjectId; // Reference to Event
+      teamSize: number;
+      totalPrice?: number;
+      createdAt: Date;
+      updatedAt: Date;
+    }
+
+    const BookingSchema: Schema = new Schema({
+      user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+      event: { type: Schema.Types.ObjectId, ref: 'Event', required: true },
+      teamSize: { type: Number, required: true, min: 1 },
+      totalPrice: { type: Number },
+    }, { timestamps: true });
+
+    export default models.Booking || model<IBooking>('Booking', BookingSchema);
+    ```
 
 ---
 
@@ -123,6 +249,7 @@ For storing user-uploaded content like logos, watermarks, and event images, an S
     *   `Secret Access Key`
     *   `Bucket Name`
     *   `Region` (e.g., `ap-south-1` for Mumbai)
+    *   `Public URL Endpoint`
 
 3.  **Environment Variables**:
     Add these to your `.env.local` file:
@@ -131,6 +258,7 @@ For storing user-uploaded content like logos, watermarks, and event images, an S
     S3_SECRET_ACCESS_KEY=...
     S3_BUCKET_NAME=...
     S3_REGION=ap-south-1
+    S3_PUBLIC_URL=https://your-bucket-name.s3.your-region.amazonaws.com
     ```
 
 ### b) Usage (Server-Side)
@@ -189,6 +317,6 @@ You'll need to create API endpoints in Next.js (or Server Actions) to handle fil
 
     // await s3Client.send(command);
     
-    // const fileUrl = `https://<bucket-name>.<region>.digitaloceanspaces.com/${key}`;
+    // const fileUrl = `${process.env.S3_PUBLIC_URL}/${key}`;
     // Save `fileUrl` to your MongoDB database.
     ```
