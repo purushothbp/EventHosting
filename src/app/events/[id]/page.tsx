@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
-import { events, Event } from '@/app/lib/placeholder-data';
+import { events } from '@/app/lib/placeholder-data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import {
   Calendar,
@@ -35,14 +35,13 @@ export default function EventDetailsPage() {
   const params = useParams();
   const eventId = params.id as string;
   const event = events.find((e) => e.id === eventId);
-  const image = PlaceHolderImages.find((img) => img.id === event?.image);
-  const { toast } = useToast();
-
+  
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [bookingStep, setBookingStep] = useState<'confirm' | 'payment' | 'ticket'>(
     'confirm'
   );
   const [teamSize, setTeamSize] = useState(event?.minTeamSize || 1);
+  const { toast } = useToast();
 
   if (!event) {
     return (
@@ -51,6 +50,8 @@ export default function EventDetailsPage() {
       </div>
     );
   }
+  
+  const image = PlaceHolderImages.find((img) => img.id === event.image);
 
   const handleBooking = () => {
     setIsBookingOpen(true);
