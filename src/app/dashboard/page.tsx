@@ -149,6 +149,16 @@ export default function DashboardPage() {
                         <Label htmlFor="is-free">Is this a free event?</Label>
                     </div>
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="min-participants">Min Participants</Label>
+                        <Input id="min-participants" type="number" defaultValue="1" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="max-participants">Max Participants</Label>
+                        <Input id="max-participants" type="number" defaultValue="1" />
+                    </div>
+                </div>
 
                 <DialogFooter>
                   <Button type="submit">Create Event</Button>

@@ -14,6 +14,7 @@ import {
   QrCode,
   CreditCard,
   CheckCircle,
+  User,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +28,8 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 export default function EventDetailsPage() {
   const params = useParams();
@@ -39,6 +42,7 @@ export default function EventDetailsPage() {
   const [bookingStep, setBookingStep] = useState<'confirm' | 'payment' | 'ticket'>(
     'confirm'
   );
+  const [teamSize, setTeamSize] = useState(event?.minTeamSize || 1);
 
   if (!event) {
     return (
@@ -54,6 +58,15 @@ export default function EventDetailsPage() {
   };
 
   const handleConfirm = () => {
+    if (teamSize < event.minTeamSize || teamSize > event.maxTeamSize) {
+      toast({
+        title: 'Invalid Team Size',
+        description: `Please enter a team size between ${event.minTeamSize} and ${event.maxTeamSize}.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (event.isFree) {
       toast({
         title: 'Booking Confirmed!',
@@ -77,6 +90,12 @@ export default function EventDetailsPage() {
   };
 
   const eventDate = new Date(event.date);
+  
+  const getTeamSizeText = () => {
+    if (event.maxTeamSize === 1) return 'Solo participation';
+    if (event.minTeamSize === event.maxTeamSize) return `${event.minTeamSize} members per team`;
+    return `Team of ${event.minTeamSize}-${event.maxTeamSize} members`;
+  }
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -125,6 +144,10 @@ export default function EventDetailsPage() {
                   <MapPin className="h-5 w-5 mr-3 text-primary" />
                   <span>{event.location}</span>
                 </div>
+                 <div className="flex items-center">
+                  <User className="h-5 w-5 mr-3 text-primary" />
+                  <span>{getTeamSizeText()}</span>
+                </div>
                 <div className="flex items-center">
                   <Users className="h-5 w-5 mr-3 text-primary" />
                   <span>Organized by {event.organizer}</span>
@@ -153,10 +176,22 @@ export default function EventDetailsPage() {
                   You are about to book a spot for "{event.title}".
                 </DialogDescription>
               </DialogHeader>
-              <div>
+              <div className="space-y-4">
                 <p><strong>Date:</strong> {eventDate.toLocaleDateString('en-IN', { dateStyle: 'full' })}</p>
                 <p><strong>Location:</strong> {event.location}</p>
                 <p><strong>Price:</strong> {event.isFree ? 'Free' : `₹${event.price}`}</p>
+                <div>
+                  <Label htmlFor="team-size">Number of Participants ({getTeamSizeText()})</Label>
+                   <Input 
+                      id="team-size" 
+                      type="number" 
+                      min={event.minTeamSize}
+                      max={event.maxTeamSize}
+                      value={teamSize}
+                      onChange={(e) => setTeamSize(Number(e.target.value))}
+                      className="mt-1"
+                   />
+                </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsBookingOpen(false)}>Cancel</Button>
@@ -170,13 +205,13 @@ export default function EventDetailsPage() {
               <DialogHeader>
                 <DialogTitle>Complete Your Payment</DialogTitle>
                 <DialogDescription>
-                  Please complete the payment of ₹{event.price} to secure your ticket.
+                  Please complete the payment of ₹{event.price! * teamSize} for {teamSize} participant(s).
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <p>This is a mock payment screen. In a real application, a payment gateway like UPI would be integrated here.</p>
                 <Button onClick={handlePayment} className="w-full">
-                  <CreditCard className="mr-2 h-4 w-4" /> Pay ₹{event.price}
+                  <CreditCard className="mr-2 h-4 w-4" /> Pay ₹{event.price! * teamSize}
                 </Button>
               </div>
             </>
@@ -189,7 +224,7 @@ export default function EventDetailsPage() {
                   <CheckCircle className="text-green-500 mr-2 h-6 w-6" /> Booking Successful!
                 </DialogTitle>
                 <DialogDescription>
-                  Here is your digital ticket. Show this QR code at the event entrance. A watermark from the organization will be on the final certificate.
+                  Here is your digital ticket for {teamSize} participant(s). Show this QR code at the event entrance. A watermark from the organization will be on the final certificate.
                 </DialogDescription>
               </DialogHeader>
               <div className="flex flex-col items-center justify-center p-8 bg-muted rounded-lg">

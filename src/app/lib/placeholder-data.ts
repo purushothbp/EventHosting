@@ -11,6 +11,8 @@ export type Event = {
   description: string;
   organizer: string;
   image: string; // image id from placeholder-images.json
+  minTeamSize: number;
+  maxTeamSize: number;
 };
 
 export const events: Event[] = [
@@ -27,6 +29,8 @@ export const events: Event[] = [
     description: 'A deep dive into the world of AI and ML with hands-on sessions. Suitable for beginners and experts alike.',
     organizer: 'AI Club',
     image: 'event-1',
+    minTeamSize: 1,
+    maxTeamSize: 1,
   },
   {
     id: '2',
@@ -40,6 +44,8 @@ export const events: Event[] = [
     description: 'An evening of beautiful music from talented artists. Come and enjoy the vibe.',
     organizer: 'Music Society',
     image: 'event-2',
+    minTeamSize: 1,
+    maxTeamSize: 5,
   },
   {
     id: '3',
@@ -53,6 +59,8 @@ export const events: Event[] = [
     description: 'A 24-hour coding challenge to build innovative solutions. Prizes worth thousands to be won!',
     organizer: 'Coding Ninjas',
     image: 'event-3',
+    minTeamSize: 2,
+    maxTeamSize: 4,
   },
   {
     id: '4',
@@ -67,6 +75,8 @@ export const events: Event[] = [
     description: 'Learn from successful entrepreneurs about their journey and the secrets to building a successful startup.',
     organizer: 'E-Cell',
     image: 'event-4',
+    minTeamSize: 1,
+    maxTeamSize: 1,
   },
   {
     id: '5',
@@ -81,6 +91,8 @@ export const events: Event[] = [
     description: 'Build and program your first robot. All kits and components will be provided.',
     organizer: 'Robotics Club',
     image: 'event-5',
+    minTeamSize: 1,
+    maxTeamSize: 2,
   },
   {
     id: '6',
@@ -94,6 +106,8 @@ export const events: Event[] = [
     description: 'The biggest annual cultural festival of the city. Featuring celebrity performances, food stalls, and games.',
     organizer: 'Student Council',
     image: 'event-6',
+    minTeamSize: 1,
+    maxTeamSize: 10,
   },
    {
     id: '7',
@@ -107,6 +121,8 @@ export const events: Event[] = [
     description: 'A guest lecture by renowned environmentalist Dr. Jane Smith on the urgency of climate action.',
     organizer: 'Green Club',
     image: 'event-7',
+    minTeamSize: 1,
+    maxTeamSize: 1,
   },
   {
     id: '8',
@@ -120,6 +136,8 @@ export const events: Event[] = [
     description: 'Capture the beauty of our city. Submit your best shots and win exciting prizes.',
     organizer: 'Photography Club',
     image: 'event-8',
+    minTeamSize: 1,
+    maxTeamSize: 1,
   },
 ];
 
