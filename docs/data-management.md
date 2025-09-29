@@ -122,7 +122,7 @@ Using an ODM like Mongoose is highly recommended to enforce schema validation. T
     #### **User Schema**
     *File: `src/models/User.ts`*
 
-    This schema stores information about individual users, including their role (attendee or organizer).
+    This schema stores information about individual users, including their role (participant, coordinator, admin, or super-admin).
 
     ```typescript
     // src/models/User.ts
@@ -134,11 +134,11 @@ Using an ODM like Mongoose is highly recommended to enforce schema validation. T
       email: string;
       name: string;
       avatarUrl?: string;
-      organization: Types.ObjectId; // Reference to Organization
+      organization?: Types.ObjectId; // Reference to Organization (optional for users, required for admins/coordinators)
       department?: string;
       year?: number;
       interests?: string[];
-      role: 'user' | 'admin';
+      role: 'user' | 'coordinator' | 'admin' | 'super-admin';
       createdAt: Date;
       updatedAt: Date;
     }
@@ -152,7 +152,11 @@ Using an ODM like Mongoose is highly recommended to enforce schema validation. T
       department: { type: String },
       year: { type: Number },
       interests: [{ type: String }],
-      role: { type: String, default: 'user', enum: ['user', 'admin'] }
+      role: { 
+        type: String, 
+        default: 'user', 
+        enum: ['user', 'coordinator', 'admin', 'super-admin'] 
+      }
     }, { timestamps: true });
 
     export default models.User || model<IUser>('User', UserSchema);
@@ -163,7 +167,7 @@ Using an ODM like Mongoose is highly recommended to enforce schema validation. T
     #### **Organization Schema**
     *File: `src/models/Organization.ts`*
     
-    This schema holds branding and administrative information for each organization on the platform.
+    This schema holds branding and administrative information for each organization on the platform. It includes lists of admins and coordinators.
 
     ```typescript
     // src/models/Organization.ts
@@ -182,6 +186,7 @@ Using an ODM like Mongoose is highly recommended to enforce schema validation. T
       watermarkUrl?: string; // URL from S3
       departmentLogos?: IDepartmentLogo[];
       admins: Types.ObjectId[]; // List of user IDs who are admins for this org
+      coordinators: Types.ObjectId[]; // List of user IDs who are coordinators for this org
       createdAt: Date;
       updatedAt: Date;
     }
@@ -196,6 +201,7 @@ Using an ODM like Mongoose is highly recommended to enforce schema validation. T
         logoUrl: String,
       }],
       admins: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+      coordinators: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     }, { timestamps: true });
 
     export default models.Organization || model<IOrganization>('Organization', OrganizationSchema);
