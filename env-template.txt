@@ -1,0 +1,17 @@
+# MongoDB Connection String Examples
+# Copy the appropriate format to your .env file and replace with your actual credentials
+
+# For MongoDB Atlas (Recommended for production):
+MONGO_URI=mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/eventhosting?retryWrites=true&w=majority
+
+# For Local MongoDB (development):
+MONGO_URI=mongodb://localhost:27017/eventhosting
+
+# For Local MongoDB with authentication:
+MONGO_URI=mongodb://username:password@localhost:27017/eventhosting
+
+# Instructions:
+# 1. Choose one of the formats above
+# 2. Replace 'username', 'password', 'cluster0.xxxxx' with your actual MongoDB credentials
+# 3. Save as .env file in the project root
+# 4. Restart your development server
