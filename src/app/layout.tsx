@@ -3,6 +3,7 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/header';
+import NextAuthProvider from './providers';
 
 export const metadata: Metadata = {
   title: 'Nexus Events',
@@ -29,11 +30,13 @@ export default function RootLayout({
         />
       </head>
       <body className={cn('min-h-screen bg-background font-body antialiased')}>
-        <div className="relative flex min-h-screen flex-col">
-          <Header/>
-          <main className="flex-1">{children}</main>
-        </div>
-        <Toaster />
+        <NextAuthProvider>
+          <div className="relative flex min-h-screen flex-col">
+            <Header/>
+            <main className="flex-1">{children}</main>
+          </div>
+          <Toaster />
+        </NextAuthProvider>
       </body>
     </html>
   );

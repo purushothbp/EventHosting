@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { signIn } from "next-auth/react";
+import { useRouter } from 'next/navigation';
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -17,6 +19,7 @@ const GoogleIcon = () => (
 
 export default function LoginPage() {
   const { toast } = useToast();
+  const router = useRouter();
 
   const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -24,17 +27,15 @@ export default function LoginPage() {
       title: "Login successful!",
       description: "You have successfully logged in.",
     });
-    // In a real app, this would redirect to the dashboard
-    // For now, we can use: window.location.href = '/dashboard';
+    router.push('/dashboard/events');
   };
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     toast({
       title: "Redirecting to Google...",
       description: "Please follow the instructions to sign in with Google.",
     });
-    // In a real app, this would initiate the OAuth flow.
-    // For example: window.location.href = '/api/auth/google';
+    await signIn('google');
   }
 
   return (
