@@ -48,7 +48,6 @@ import {
   ResponsiveContainer,
   BarChart as RechartsBarChart,
 } from 'recharts';
-import { events } from '@/app/lib/placeholder-data';
 import { useToast } from '@/hooks/use-toast';
 import {
   Select,
@@ -59,18 +58,19 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import Link from 'next/link';
+import { useState } from 'react';
+import { useStore } from '@/store/states';
 
-const chartData = [
-  { name: 'AI Workshop', registrations: 120 },
-  { name: 'Hackathon', registrations: 250 },
-  { name: 'Startup Seminar', registrations: 80 },
-  { name: 'Robotics Intro', registrations: 95 },
-];
 
-const organizerEvents = events.slice(0, 3);
+
+
 
 export default function DashboardPage() {
+  const { events, setEvents } = useStore();
   const { toast } = useToast();
+  
+  const userName = 'Your Name';
+  const organizerEvents = events.filter((event) => event.organizer === userName);
 
   const handleCreateEvent = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -117,47 +117,47 @@ export default function DashboardPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="description">Description</Label>
-                  <Textarea id="description" placeholder="A deep dive into the world of AI..."/>
+                  <Textarea id="description" placeholder="A deep dive into the world of AI..." />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="location">Location</Label>
-                        <Input id="location" placeholder="e.g. Auditorium A"/>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="type">Event Type</Label>
-                        <Select>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select event type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="Workshop">Workshop</SelectItem>
-                                <SelectItem value="Seminar">Seminar</SelectItem>
-                                <SelectItem value="Competition">Competition</SelectItem>
-                                <SelectItem value="Cultural">Cultural</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="location">Location</Label>
+                    <Input id="location" placeholder="e.g. Auditorium A" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="type">Event Type</Label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select event type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Workshop">Workshop</SelectItem>
+                        <SelectItem value="Seminar">Seminar</SelectItem>
+                        <SelectItem value="Competition">Competition</SelectItem>
+                        <SelectItem value="Cultural">Cultural</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                 <div className="grid grid-cols-2 gap-4 items-end">
-                    <div className="space-y-2">
-                        <Label htmlFor="price">Price (₹)</Label>
-                        <Input id="price" type="number" placeholder="Enter 0 for free events" />
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <Switch id="is-free" />
-                        <Label htmlFor="is-free">Is this a free event?</Label>
-                    </div>
+                <div className="grid grid-cols-2 gap-4 items-end">
+                  <div className="space-y-2">
+                    <Label htmlFor="price">Price (₹)</Label>
+                    <Input id="price" type="number" placeholder="Enter 0 for free events" />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch id="is-free" />
+                    <Label htmlFor="is-free">Is this a free event?</Label>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="min-participants">Min Participants</Label>
-                        <Input id="min-participants" type="number" defaultValue="1" />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="max-participants">Max Participants</Label>
-                        <Input id="max-participants" type="number" defaultValue="1" />
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="min-participants">Min Participants</Label>
+                    <Input id="min-participants" type="number" defaultValue="1" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="max-participants">Max Participants</Label>
+                    <Input id="max-participants" type="number" defaultValue="1" />
+                  </div>
                 </div>
 
                 <DialogFooter>
@@ -194,7 +194,7 @@ export default function DashboardPage() {
                 </TableHeader>
                 <TableBody>
                   {organizerEvents.map((event) => (
-                    <TableRow key={event.id}>
+                    <TableRow key={event._id}>
                       <TableCell className="font-medium">
                         {event.title}
                       </TableCell>
@@ -263,9 +263,9 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={350}>
-                <RechartsBarChart data={chartData}>
+                <RechartsBarChart data={organizerEvents}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
+                  <XAxis dataKey="title" />
                   <YAxis />
                   <Tooltip
                     contentStyle={{

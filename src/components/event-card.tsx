@@ -1,5 +1,4 @@
 import Image from 'next/image';
-import Link from 'next/link';
 import {
   Card,
   CardContent,
@@ -12,6 +11,8 @@ import { Calendar, MapPin, ArrowRight } from 'lucide-react';
 import type { Event } from '@/app/lib/placeholder-data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
+import { useStore } from '@/store/states';
 
 interface EventCardProps {
   event: Event;
@@ -20,11 +21,20 @@ interface EventCardProps {
 export function EventCard({ event }: EventCardProps) {
   const image = PlaceHolderImages.find((img) => img.id === event.image);
   const eventDate = new Date(event.date);
+  const router = useRouter();
+
+  const { setEventId } = useStore();
+
+  const handleViewDetails = (eventId: string) => {
+    console.log("Setting event ID:", eventId);
+    setEventId(eventId);
+    router.push(`/events/${eventId}`);
+  };
 
   return (
     <Card className="flex flex-col overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 duration-300 ease-in-out">
       <CardHeader className="p-0">
-        <Link href={`/events/${event.id}`} className="block">
+        <div className="block cursor-pointer" onClick={() => handleViewDetails(event._id)}>
           <div className="relative h-40 sm:h-48 w-full">
             {image && (
               <Image
@@ -38,23 +48,21 @@ export function EventCard({ event }: EventCardProps) {
             )}
             <Badge
               className={cn(
-                'absolute top-2 right-2 text-xs sm:text-sm',
-                event.isFree ? 'bg-green-500' : 'bg-primary'
+                'absolute top-2 right-2',
+                event.isFree ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600'
               )}
             >
-              {event.isFree ? 'Free' : `₹${event.price}`}
+              {event.isFree ? 'Free' : `Rs ${event.price} /-`}
             </Badge>
           </div>
-        </Link>
+        </div>
       </CardHeader>
       <CardContent className="p-3 sm:p-4 flex-grow">
         <div className="flex justify-between items-start">
             <Badge variant="secondary" className="mb-2 text-xs sm:text-sm">{event.type}</Badge>
         </div>
-        <h3 className="font-headline text-base sm:text-lg font-semibold leading-tight mb-2 line-clamp-2">
-          <Link href={`/events/${event.id}`} className="hover:text-primary">
-            {event.title}
-          </Link>
+        <h3 className="font-headline text-base sm:text-lg font-semibold leading-tight mb-2 line-clamp-2 cursor-pointer" onClick={() => handleViewDetails(event._id)}>
+          {event.title}
         </h3>
         <div className="text-xs sm:text-sm text-muted-foreground space-y-1 sm:space-y-2">
           <div className="flex items-center">
@@ -68,10 +76,10 @@ export function EventCard({ event }: EventCardProps) {
         </div>
       </CardContent>
       <CardFooter className="p-3 sm:p-4 pt-0">
-        <Button asChild className="w-full text-sm sm:text-base" variant="outline">
-          <Link href={`/events/${event.id}`}>
+        <Button className="w-full text-sm sm:text-base" variant="outline"
+        onClick={() => handleViewDetails(event._id)}
+        >
             View Details <ArrowRight className="ml-2 h-3 w-3 sm:h-4 sm:w-4" />
-          </Link>
         </Button>
       </CardFooter>
     </Card>

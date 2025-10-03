@@ -10,10 +10,11 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
+import { useStore } from '@/store/states';
 
 export default function HomeClient({ initialEvents }: { initialEvents: any[] }) {
     const [allEvents] = useState(initialEvents); // keep original
-    const [events, setEvents] = useState(initialEvents);
+    const { events, setEvents } = useStore();
 
     const [organization, setOrganization] = useState('all');
     const [department, setDepartment] = useState('all');
@@ -105,7 +106,7 @@ export default function HomeClient({ initialEvents }: { initialEvents: any[] }) 
             {events.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
                     {events.map((event) => (
-                        <EventCard key={event.id} event={event} />
+                        <EventCard key={event._id} event={event} />
                     ))}
                 </div>
             ) : (

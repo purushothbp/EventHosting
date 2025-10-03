@@ -8,3 +8,9 @@ export async function GET(request: Request, { params }: { params: { id: string }
   const event = await Event.findById(params.id).lean();
   return NextResponse.json(event);
 }
+
+export const getEventById = async function POST({params}:{params:{id:string}}) {
+  await connectToDatabase();
+  const event = await Event.findById(params.id).lean();
+  return NextResponse.json(event);
+}

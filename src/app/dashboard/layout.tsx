@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
-import './globals.css';
+import '@/app/globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
+import Header from '@/components/header';
 
 export const metadata: Metadata = {
   title: 'Nexus Events',
@@ -27,8 +28,11 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={cn('min-h-screen bg-background font-body antialiased')}>
-          <main className="w-full h-full items-center justify-center">{children}</main>
+      <body className={cn(' h-full w-full')}>
+        <div className="flex h-full w-full flex-col">
+          <Header />
+          <main className="flex-1">{children}</main>
+        </div>
         <Toaster />
       </body>
     </html>

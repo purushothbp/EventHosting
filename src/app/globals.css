@@ -3,9 +3,14 @@
 @tailwind utilities;
 
 body {
-  font-family: 'PT Sans', sans-serif;
+  font-family: 'Calibri', 'Candara', 'Segoe', 'Segoe UI', 'Optima', 'Arial', 'sans-serif';
 }
 
+@theme{
+  --color-primary: 207.3 70.4% 53.3%;
+  --color-secondary: 210 20% 94%;
+  --color-border: #c5eaed;
+}
 @layer base {
   :root {
     --background: 210 40% 98%;
