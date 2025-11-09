@@ -1,42 +1,32 @@
-import type { Metadata } from 'next';
-import './globals.css';
-import { cn } from '@/lib/utils';
-import { Toaster } from '@/components/ui/toaster';
-import Header from '@/components/header';
-import NextAuthProvider from './providers';
+// src/app/layout.tsx
+'use client';
 
-export const metadata: Metadata = {
-  title: 'Nexus Events',
-  description: 'An event discovery and booking platform for students.',
-};
+import { Inter } from 'next/font/google';
+import './globals.css';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { SessionProvider } from 'next-auth/react';
+import Header from '@/components/header';
+
+const inter = Inter({ subsets: ['latin'] });
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=PT+Sans:wght@400;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className={cn('min-h-screen bg-background font-body antialiased')}>
-        <NextAuthProvider>
-          <div className="relative flex min-h-screen flex-col">
-            <Header/>
-            <main className="flex-1">{children}</main>
-          </div>
-          <Toaster />
-        </NextAuthProvider>
+    <html lang="en">
+      <body className={inter.className}>
+        <SessionProvider>
+          <AuthProvider>
+            <div className="min-h-screen flex flex-col">
+              <Header />
+              <main className="flex-1 h-full w-full">
+                {children}
+              </main>
+            </div>
+          </AuthProvider>
+        </SessionProvider>
       </body>
     </html>
   );

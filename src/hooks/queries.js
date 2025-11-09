@@ -9,8 +9,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
-    return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    var _ = { label: 0, sent: function () { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
+    return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function () { return this; }), g;
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
@@ -53,143 +53,31 @@ function seed() {
                     console.log("Connected to DB");
                     // clear old docs
                     return [4 /*yield*/, Promise.all([
-                            user_1.default.deleteMany({}),
-                            Organization_1.default.deleteMany({}),
-                            event_1.default.deleteMany({})
-                        ])];
+                        user_1.default.deleteMany({}),
+                        Organization_1.default.deleteMany({}),
+                        event_1.default.deleteMany({})
+                    ])];
                 case 2:
                     // clear old docs
                     _a.sent();
                     return [4 /*yield*/, user_1.default.insertMany([
-                            {
-                                clerkId: "clerk_admin_001",
-                                email: "hariharan@gmail.com",
-                                name: "Hariharan",
-                                role: "admin",
-                                department: "CSE",
-                                year: 3,
-                                interests: ["Tech", "Leadership"],
-                            },
-                            {
-                                clerkId: "clerk_superadmin_001",
-                                email: "purush1605@gmail.com",
-                                name: "Purushothaman",
-                                role: "super-admin",
-                                department: "ECE",
-                                year: 4,
-                                interests: ["Management", "Innovation"],
-                            },
-                            {
-                                clerkId: "clerk_user_001",
-                                email: "john.doe@example.com",
-                                name: "John Doe",
-                                role: "user",
-                                department: "Mechanical",
-                                year: 2,
-                                interests: ["Robotics", "Gaming"],
-                            },
-                            {
-                                clerkId: "clerk_user_002",
-                                email: "jane.smith@example.com",
-                                name: "Jane Smith",
-                                role: "coordinator",
-                                department: "IT",
-                                year: 1,
-                                interests: ["Cultural", "Events"],
-                            },
-                        ])];
+
+                    ])];
                 case 3:
                     users = _a.sent();
                     hariharan = users.find(function (u) { return u.email === "hariharan@gmail.com"; });
                     purush = users.find(function (u) { return u.email === "purush1605@gmail.com"; });
                     jane = users.find(function (u) { return u.email === "jane.smith@example.com"; });
                     return [4 /*yield*/, Organization_1.default.insertMany([
-                            {
-                                name: "Tech Society",
-                                tagline: "Innovating the Future",
-                                logoUrl: "https://dummy.s3.amazonaws.com/logos/techsociety.png",
-                                watermarkUrl: "https://dummy.s3.amazonaws.com/watermarks/techsociety_wm.png",
-                                departmentLogos: [
-                                    {
-                                        departmentName: "CSE",
-                                        logoUrl: "https://dummy.s3.amazonaws.com/logos/cse.png",
-                                    },
-                                    {
-                                        departmentName: "ECE",
-                                        logoUrl: "https://dummy.s3.amazonaws.com/logos/ece.png",
-                                    },
-                                ],
-                                admins: [hariharan._id],
-                                coordinators: [jane._id],
-                            },
-                            {
-                                name: "Cultural Club",
-                                tagline: "Where Culture Comes Alive",
-                                logoUrl: "https://dummy.s3.amazonaws.com/logos/culturalclub.png",
-                                watermarkUrl: "https://dummy.s3.amazonaws.com/watermarks/culturalclub_wm.png",
-                                departmentLogos: [
-                                    {
-                                        departmentName: "Arts",
-                                        logoUrl: "https://dummy.s3.amazonaws.com/logos/arts.png",
-                                    },
-                                    {
-                                        departmentName: "Drama",
-                                        logoUrl: "https://dummy.s3.amazonaws.com/logos/drama.png",
-                                    },
-                                ],
-                                admins: [purush._id],
-                                coordinators: [],
-                            },
-                        ])];
+
+                    ])];
                 case 4:
                     organizations = _a.sent();
                     techSociety = organizations[0];
                     // 3️⃣ Insert Events (linked to Tech Society + Hariharan)
                     return [4 /*yield*/, event_1.default.insertMany([
-                            {
-                                title: "AI Workshop",
-                                date: new Date("2025-10-10"),
-                                location: "Auditorium Hall A",
-                                description: "An introductory workshop on Artificial Intelligence basics and applications.",
-                                imageUrl: "https://dummy.s3.amazonaws.com/images/aiworkshop.png", // use dummy
-                                isFree: true,
-                                type: "Workshop",
-                                organization: techSociety._id,
-                                department: "CSE",
-                                organizer: hariharan._id,
-                                minTeamSize: 1,
-                                maxTeamSize: 5,
-                            },
-                            {
-                                title: "Cybersecurity Seminar",
-                                date: new Date("2025-11-05"),
-                                location: "Main Seminar Room",
-                                description: "A seminar covering the latest trends in cybersecurity.",
-                                imageUrl: "https://dummy.s3.amazonaws.com/images/cybersecurity.png",
-                                isFree: false,
-                                price: 200,
-                                type: "Seminar",
-                                organization: techSociety._id,
-                                department: "IT",
-                                organizer: hariharan._id,
-                                minTeamSize: 1,
-                                maxTeamSize: 1,
-                            },
-                            {
-                                title: "Cultural Fest 2025",
-                                date: new Date("2025-12-15"),
-                                location: "Open Grounds",
-                                description: "Annual college cultural festival with music, dance, and drama.",
-                                imageUrl: "https://dummy.s3.amazonaws.com/images/culturalfest.png",
-                                isFree: true,
-                                type: "Cultural",
-                                organization: techSociety._id,
-                                department: "All",
-                                organizer: hariharan._id,
-                                minTeamSize: 1,
-                                maxTeamSize: 10,
-                            },
-                        ])];
+
+                    ])];
                 case 5:
                     // 3️⃣ Insert Events (linked to Tech Society + Hariharan)
                     _a.sent();

@@ -1,21 +1,33 @@
-import mongoose from "mongoose";
+// src/lib/mongo.ts
+import mongoose from 'mongoose';
 
-if (!process.env.MONGO_URI) {
-  throw new Error("Please define the MONGO_URI environment variable");
+// Import all models to ensure they're registered before any database operations
+import '@/models';
+
+const MONGODB_URI = process.env.MONGODB_URI as string || 'mongodb+srv://purush:Padhu8697@cluster0.taoh2ot.mongodb.net/eventhosting';
+
+if (!MONGODB_URI) {
+  throw new Error('Please define the MONGODB_URI environment variable');
 }
 
-const MONGO_URI = process.env.MONGO_URI;
+interface CachedMongoose {
+  conn: typeof mongoose | null;
+  promise: Promise<typeof mongoose> | null;
+}
 
-// Global is used here to maintain a cached connection across hot reloads in dev
-let cached = (global as any).mongoose;
+declare global {
+  var mongoose: CachedMongoose;
+}
+
+let cached = global.mongoose;
 
 if (!cached) {
-  cached = (global as any).mongoose = { conn: null, promise: null };
+  cached = global.mongoose = { conn: null, promise: null };
 }
 
 export async function connectToDatabase() {
   if (cached.conn) {
-    return cached.conn;
+    return { conn: cached.conn, promise: cached.promise };
   }
 
   if (!cached.promise) {
@@ -23,17 +35,35 @@ export async function connectToDatabase() {
       bufferCommands: false,
     };
 
-    cached.promise = mongoose.connect(MONGO_URI, opts).then((mongoose) => {
-      return mongoose;
-    });
+    try {
+      console.log('Connecting to MongoDB...');
+      cached.promise = mongoose.connect(MONGODB_URI, opts);
+      await cached.promise;
+      console.log('MongoDB connected successfully');
+      
+      // Verify models are registered
+      const models = ['User', 'Event', 'Organization'];
+      models.forEach(model => {
+        if (!mongoose.models[model]) {
+          console.error(`⚠️ ${model} model is not registered`);
+        } else {
+          console.log(`✅ ${model} model is registered`);
+        }
+      });
+      
+    } catch (e) {
+      console.error('MongoDB connection error:', e);
+      cached.promise = null;
+      throw e;
+    }
   }
 
   try {
     cached.conn = await cached.promise;
+    return { conn: cached.conn, promise: cached.promise };
   } catch (e) {
+    console.error('MongoDB connection error:', e);
     cached.promise = null;
     throw e;
   }
-
-  return cached.conn;
 }

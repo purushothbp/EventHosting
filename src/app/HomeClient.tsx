@@ -46,9 +46,23 @@ export default function HomeClient({ initialEvents }: { initialEvents: any[] }) 
         setEvents(filteredEvents);
     }, [organization, department, eventType, isFree, searchTerm, allEvents]);
 
-    const uniqueOrganizations = ['all', ...Array.from(new Set(allEvents.map((e) => e.organization)))];
-    const uniqueDepartments = ['all', ...Array.from(new Set(allEvents.map((e) => e.department)))];
-    const uniqueEventTypes = ['all', ...Array.from(new Set(allEvents.map((e) => e.type)))];
+    const uniqueOrganizations = ['all', ...new Set(
+        allEvents
+            .map((e) => e.organization)
+            .filter((org): org is string => Boolean(org))
+    )];
+
+    const uniqueDepartments = ['all', ...new Set(
+        allEvents
+            .map((e) => e.department)
+            .filter((dept): dept is string => Boolean(dept))
+    )];
+
+    const uniqueEventTypes = ['all', ...new Set(
+        allEvents
+            .map((e) => e.type)
+            .filter((type): type is string => Boolean(type))
+    )];
 
     return (
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
@@ -77,21 +91,28 @@ export default function HomeClient({ initialEvents }: { initialEvents: any[] }) 
                             <SelectValue placeholder="Filter by Organization" />
                         </SelectTrigger>
                         <SelectContent>
-                            {uniqueOrganizations.map((c) => (
-                                <SelectItem key={c} value={c}>
-                                    {c === 'all' ? 'All Organizations' : c}
+                            {uniqueOrganizations.map((org) => (
+                                <SelectItem
+                                    key={org}
+                                    value={org}
+                                >
+                                    {org === 'all' ? 'All Organizations' : org}
                                 </SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
+
                     <Select value={department} onValueChange={setDepartment}>
                         <SelectTrigger>
                             <SelectValue placeholder="Filter by Department" />
                         </SelectTrigger>
                         <SelectContent>
-                            {uniqueDepartments.map((d) => (
-                                <SelectItem key={d} value={d}>
-                                    {d === 'all' ? 'All Departments' : d}
+                            {uniqueDepartments.map((dept) => (
+                                <SelectItem
+                                    key={dept}
+                                    value={dept}
+                                >
+                                    {dept === 'all' ? 'All Departments' : dept}
                                 </SelectItem>
                             ))}
                         </SelectContent>

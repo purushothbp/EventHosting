@@ -55,7 +55,7 @@ export async function GET(
     return NextResponse.json(
       { 
         error: 'Failed to fetch event',
-        details: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
+        details: process.env.NEXT_NODE_ENV === 'development' ? (error as Error).message : undefined
       },
       { status: 500 }
     );

@@ -12,6 +12,7 @@ export interface IEvent extends Document {
   type: 'Workshop' | 'Seminar' | 'Competition' | 'Cultural';
   organization: Types.ObjectId; // Reference to Organization
   department?: string;
+  templateUrl?: string;
   organizer: Types.ObjectId; // Reference to User
   minTeamSize: number;
   maxTeamSize: number;
@@ -30,6 +31,7 @@ const EventSchema: Schema<IEvent> = new Schema({
   type: { type: String, required: true, enum: ['Workshop', 'Seminar', 'Competition', 'Cultural'] },
   organization: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
   department: { type: String },
+  templateUrl: { type: String },
   organizer: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   minTeamSize: { type: Number, default: 1 },
   maxTeamSize: { type: Number, default: 1 },

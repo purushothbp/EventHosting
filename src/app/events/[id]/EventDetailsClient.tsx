@@ -47,6 +47,7 @@ interface EventDetailsClientProps {
     organizer: string | { name: string };
     minTeamSize: number;
     maxTeamSize: number;
+    templateUrl?: string;
   };
   eventId: string;
 }
@@ -193,6 +194,24 @@ export default function EventDetailsClient({ event, eventId }: EventDetailsClien
             <h2 className="text-xl font-semibold">About the Event</h2>
             <p className="text-muted-foreground">{event.description}</p>
           </div>
+
+          {event.templateUrl && (
+            <div className="space-y-3 pt-4">
+              <h2 className="text-xl font-semibold">Event Template</h2>
+              <a 
+                href={event.templateUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 0v12h8V7.414L10.586 4H6z" clipRule="evenodd" />
+                </svg>
+                Download Event Template
+              </a>
+              <p className="text-sm text-gray-500 mt-1">This template contains guidelines and resources for the event.</p>
+            </div>
+          )}
         </div>
 
         <div className="space-y-6">
