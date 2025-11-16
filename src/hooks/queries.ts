@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import EventModel from '../models/event';
 import UserModel from '../models/user';
-import OrganizationModel from '../models/organization';
+import OrganizationModel from '../models/Organization';
 
 // Use the models directly
 const Event = EventModel;

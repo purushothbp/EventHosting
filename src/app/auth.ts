@@ -3,7 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { compare } from 'bcryptjs';
 import { connectToDatabase } from '@/app/lib/mongo';
 import User, { IUser } from '@/models/user';
-import Organization, { IOrganization } from '@/models/organization';
+import Organization, { IOrganization } from '@/models/Organization';
 
 interface IUserWithPassword extends Omit<IUser, 'password'> {
   password?: string;

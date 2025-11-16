@@ -2,7 +2,7 @@
 import HomeClient from "@/app/HomeClient";
 import { connectToDatabase } from "@/app/lib/mongo";
 import Event, { IEvent } from "@/models/event";
-import "@/models/organization";
+import "@/models/Organization";
 import "@/models/user";
 
 export const dynamic = 'force-dynamic';

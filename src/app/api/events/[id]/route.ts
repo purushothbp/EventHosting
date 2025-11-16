@@ -2,7 +2,7 @@ import { connectToDatabase } from '@/app/lib/mongo';
 import { NextResponse } from 'next/server';
 import Event, { IEvent } from '@/models/event';
 import Registration from '@/models/registration';
-import '@/models/organization';
+import '@/models/Organization';
 import '@/models/user';
 
 type EventRouteContext = {

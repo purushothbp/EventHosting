@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import Organization from "@/models/organization";
+import Organization from "@/models/Organization";
 import User from "@/models/user";
 import mongoose, { Types } from 'mongoose';
 import { hash } from 'bcryptjs';

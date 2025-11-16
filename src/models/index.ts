@@ -1,13 +1,13 @@
 // Import all models to ensure they are registered with Mongoose
 import './user';
 import './event';
-import './organization';
+import './Organization';
 import './registration';
 
 // Import models
 import User, { IUser } from './user';
 import Event, { IEvent } from './event';
-import Organization, { IOrganization } from './organization';
+import Organization, { IOrganization } from './Organization';
 import Registration, { IRegistration } from './registration';
 
 // Export all models
