@@ -7,7 +7,10 @@ import { DayPicker } from "react-day-picker"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
-export type CalendarProps = React.ComponentProps<typeof DayPicker>
+export type CalendarProps = React.ComponentProps<typeof DayPicker> & {
+  className?: string;
+  classNames?: Record<string, string>;
+}
 
 function Calendar({
   className,
@@ -54,11 +57,11 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        IconLeft: ({ className, ...props }) => (
-          <ChevronLeft className={cn("h-4 w-4", className)} {...props} />
+        IconLeft: ({ className, ...iconProps }: React.SVGProps<SVGSVGElement>) => (
+          <ChevronLeft className={cn("h-4 w-4", className)} {...iconProps} />
         ),
-        IconRight: ({ className, ...props }) => (
-          <ChevronRight className={cn("h-4 w-4", className)} {...props} />
+        IconRight: ({ className, ...iconProps }: React.SVGProps<SVGSVGElement>) => (
+          <ChevronRight className={cn("h-4 w-4", className)} {...iconProps} />
         ),
       }}
       {...props}

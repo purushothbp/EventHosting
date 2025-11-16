@@ -12,18 +12,23 @@ import { Loader2, FileDown, FileText, Edit, X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 
-import { UserProfile, Education, Experience, Project, Skill, SocialProfile, Certification } from '@/types/profile';
+import { UserProfile, Education, Experience, Project, Skill, SocialProfile, Certification, Internship } from '@/types/profile';
 
-interface ProfileFormData extends Omit<UserProfile, 'education' | 'experience' | 'projects' | 'skills' | 'socialProfiles' | 'certifications' | 'image' | 'resumeUrl'> {
-    education: (Education & { id: string; isNew?: boolean })[];
-    experience: (Experience & { id: string; isNew?: boolean })[];
-    projects: (Project & { id: string; isNew?: boolean })[];
-    skills: (Skill & { id: string; isNew?: boolean })[];
-    socialProfiles: (SocialProfile & { id: string; isNew?: boolean })[];
-    certifications: (Certification & { id: string; isNew?: boolean })[];
+type CollectionItem<T> = Omit<T, '_id'> & { _id?: string; id: string; isNew?: boolean };
+
+interface ProfileFormData extends Omit<UserProfile, 'education' | 'experience' | 'projects' | 'skills' | 'socialProfiles' | 'certifications' | 'internships' | 'image' | 'resumeUrl'> {
+    education: CollectionItem<Education>[];
+    experience: CollectionItem<Experience>[];
+    internships: CollectionItem<Internship>[];
+    projects: CollectionItem<Project>[];
+    skills: CollectionItem<Skill>[];
+    socialProfiles: CollectionItem<SocialProfile>[];
+    certifications: CollectionItem<Certification>[];
     newEducation: Omit<Education, '_id'>;
     newExperience: Omit<Experience, '_id'>;
+    newInternship: Omit<Internship, '_id'>;
     newProject: Omit<Project, '_id'>;
     newSkill: Omit<Skill, '_id'>;
     newSocialProfile: Omit<SocialProfile, '_id'>;
@@ -58,6 +63,7 @@ export default function EditProfilePage() {
         organizations: [],
         education: [],
         experience: [],
+        internships: [],
         projects: [],
         skills: [],
         socialProfiles: [],
@@ -76,6 +82,15 @@ export default function EditProfilePage() {
             gpa: ''
         },
         newExperience: {
+            company: '',
+            position: '',
+            location: '',
+            startDate: '',
+            endDate: '',
+            current: false,
+            description: ''
+        },
+        newInternship: {
             company: '',
             position: '',
             location: '',
@@ -142,6 +157,11 @@ export default function EditProfilePage() {
                     experience: (profileData.experience || []).map(exp => ({
                         ...exp,
                         id: exp._id,
+                        isNew: false
+                    })),
+                    internships: (profileData.internships || []).map(intern => ({
+                        ...intern,
+                        id: intern._id,
                         isNew: false
                     })),
                     projects: (profileData.projects || []).map(proj => ({
@@ -220,6 +240,70 @@ export default function EditProfilePage() {
         }));
     }, []);
 
+    const addExperience = useCallback(() => {
+        if (!formData.newExperience.company || !formData.newExperience.position) return;
+
+        setFormData(prev => ({
+            ...prev,
+            experience: [
+                ...prev.experience,
+                {
+                    ...prev.newExperience,
+                    id: `exp-${Date.now()}`,
+                    isNew: true
+                }
+            ],
+            newExperience: {
+                company: '',
+                position: '',
+                location: '',
+                startDate: '',
+                endDate: '',
+                current: false,
+                description: ''
+            }
+        }));
+    }, [formData.newExperience]);
+
+    const removeExperience = useCallback((id: string) => {
+        setFormData(prev => ({
+            ...prev,
+            experience: prev.experience.filter(exp => exp.id !== id)
+        }));
+    }, []);
+
+    const addInternship = useCallback(() => {
+        if (!formData.newInternship.company || !formData.newInternship.position) return;
+
+        setFormData(prev => ({
+            ...prev,
+            internships: [
+                ...prev.internships,
+                {
+                    ...prev.newInternship,
+                    id: `intern-${Date.now()}`,
+                    isNew: true
+                }
+            ],
+            newInternship: {
+                company: '',
+                position: '',
+                location: '',
+                startDate: '',
+                endDate: '',
+                current: false,
+                description: ''
+            }
+        }));
+    }, [formData.newInternship]);
+
+    const removeInternship = useCallback((id: string) => {
+        setFormData(prev => ({
+            ...prev,
+            internships: prev.internships.filter(intern => intern.id !== id)
+        }));
+    }, []);
+
     const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>, field: 'resumeFile' | 'profileImage') => {
         if (e.target.files && e.target.files[0]) {
             setFormData(prev => ({
@@ -250,6 +334,7 @@ export default function EditProfilePage() {
                 availableForHire: formData.availableForHire,
                 education: formData.education.map(({ id, isNew, ...rest }) => rest),
                 experience: formData.experience.map(({ id, isNew, ...rest }) => rest),
+                internships: formData.internships.map(({ id, isNew, ...rest }) => rest),
                 projects: formData.projects.map(({ id, isNew, ...rest }) => rest),
                 skills: formData.skills.map(({ id, isNew, ...rest }) => rest),
                 socialProfiles: formData.socialProfiles.map(({ id, isNew, ...rest }) => rest),
@@ -331,6 +416,7 @@ export default function EditProfilePage() {
                 availableForHire: formData.availableForHire,
                 education: cleanData(formData.education),
                 experience: cleanData(formData.experience),
+                internships: cleanData(formData.internships),
                 projects: cleanData(formData.projects),
                 skills: cleanData(formData.skills),
                 socialProfiles: cleanData(formData.socialProfiles),
@@ -533,6 +619,316 @@ export default function EditProfilePage() {
                                     onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                                     placeholder="A brief summary of your professional background and skills..."
                                 />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Experience</CardTitle>
+                            <CardDescription>Highlight your professional journey</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            {formData.experience.length > 0 ? (
+                                formData.experience.map((exp) => (
+                                    <div key={exp.id} className="rounded-lg border p-4 relative">
+                                        <button
+                                            type="button"
+                                            onClick={() => removeExperience(exp.id)}
+                                            className="absolute right-3 top-3 text-muted-foreground hover:text-destructive"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                        <div className="space-y-1">
+                                            <p className="text-sm font-semibold">{exp.position}</p>
+                                            <p className="text-sm text-muted-foreground">{exp.company}</p>
+                                            {exp.location && (
+                                                <p className="text-xs text-muted-foreground">{exp.location}</p>
+                                            )}
+                                            <p className="text-xs text-muted-foreground">
+                                                {exp.startDate} - {exp.current ? 'Present' : exp.endDate || 'N/A'}
+                                            </p>
+                                            {exp.description && (
+                                                <p className="text-sm text-muted-foreground mt-2">{exp.description}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-sm text-muted-foreground">No experience added yet.</p>
+                            )}
+
+                            <div className="rounded-lg border border-dashed p-4 space-y-4">
+                                <h4 className="font-medium">Add Experience</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <Label htmlFor="expCompany">Company *</Label>
+                                        <Input
+                                            id="expCompany"
+                                            value={formData.newExperience.company}
+                                            onChange={(e) =>
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    newExperience: { ...prev.newExperience, company: e.target.value }
+                                                }))
+                                            }
+                                            placeholder="Company Name"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="expPosition">Position *</Label>
+                                        <Input
+                                            id="expPosition"
+                                            value={formData.newExperience.position}
+                                            onChange={(e) =>
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    newExperience: { ...prev.newExperience, position: e.target.value }
+                                                }))
+                                            }
+                                            placeholder="Role / Title"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="expLocation">Location</Label>
+                                        <Input
+                                            id="expLocation"
+                                            value={formData.newExperience.location || ''}
+                                            onChange={(e) =>
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    newExperience: { ...prev.newExperience, location: e.target.value }
+                                                }))
+                                            }
+                                            placeholder="City, Country"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <Label htmlFor="expStartDate">Start Date</Label>
+                                            <Input
+                                                id="expStartDate"
+                                                type="date"
+                                                value={formData.newExperience.startDate}
+                                                onChange={(e) =>
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        newExperience: { ...prev.newExperience, startDate: e.target.value }
+                                                    }))
+                                                }
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="expEndDate">End Date</Label>
+                                            <Input
+                                                id="expEndDate"
+                                                type="date"
+                                                disabled={formData.newExperience.current}
+                                                value={formData.newExperience.endDate || ''}
+                                                onChange={(e) =>
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        newExperience: { ...prev.newExperience, endDate: e.target.value }
+                                                    }))
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="expCurrent"
+                                        checked={formData.newExperience.current}
+                                        onCheckedChange={(checked) =>
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                newExperience: {
+                                                    ...prev.newExperience,
+                                                    current: Boolean(checked),
+                                                    endDate: checked ? '' : prev.newExperience.endDate
+                                                }
+                                            }))
+                                        }
+                                    />
+                                    <Label htmlFor="expCurrent">I currently work here</Label>
+                                </div>
+                                <div>
+                                    <Label htmlFor="expDescription">Description</Label>
+                                    <Textarea
+                                        id="expDescription"
+                                        value={formData.newExperience.description || ''}
+                                        onChange={(e) =>
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                newExperience: { ...prev.newExperience, description: e.target.value }
+                                            }))
+                                        }
+                                        placeholder="Key responsibilities, achievements, tools..."
+                                    />
+                                </div>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={addExperience}
+                                    disabled={!formData.newExperience.company || !formData.newExperience.position}
+                                >
+                                    Add Experience
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Internships</CardTitle>
+                            <CardDescription>Capture hands-on learning experiences</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            {formData.internships.length > 0 ? (
+                                formData.internships.map((intern) => (
+                                    <div key={intern.id} className="rounded-lg border p-4 relative">
+                                        <button
+                                            type="button"
+                                            onClick={() => removeInternship(intern.id)}
+                                            className="absolute right-3 top-3 text-muted-foreground hover:text-destructive"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                        <div className="space-y-1">
+                                            <p className="text-sm font-semibold">{intern.position}</p>
+                                            <p className="text-sm text-muted-foreground">{intern.company}</p>
+                                            {intern.location && (
+                                                <p className="text-xs text-muted-foreground">{intern.location}</p>
+                                            )}
+                                            <p className="text-xs text-muted-foreground">
+                                                {intern.startDate} - {intern.current ? 'Present' : intern.endDate || 'N/A'}
+                                            </p>
+                                            {intern.description && (
+                                                <p className="text-sm text-muted-foreground mt-2">{intern.description}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-sm text-muted-foreground">No internships recorded yet.</p>
+                            )}
+
+                            <div className="rounded-lg border border-dashed p-4 space-y-4">
+                                <h4 className="font-medium">Add Internship</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <Label htmlFor="internCompany">Company *</Label>
+                                        <Input
+                                            id="internCompany"
+                                            value={formData.newInternship.company}
+                                            onChange={(e) =>
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    newInternship: { ...prev.newInternship, company: e.target.value }
+                                                }))
+                                            }
+                                            placeholder="Organization"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="internPosition">Role *</Label>
+                                        <Input
+                                            id="internPosition"
+                                            value={formData.newInternship.position}
+                                            onChange={(e) =>
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    newInternship: { ...prev.newInternship, position: e.target.value }
+                                                }))
+                                            }
+                                            placeholder="Internship Title"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="internLocation">Location</Label>
+                                        <Input
+                                            id="internLocation"
+                                            value={formData.newInternship.location || ''}
+                                            onChange={(e) =>
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    newInternship: { ...prev.newInternship, location: e.target.value }
+                                                }))
+                                            }
+                                            placeholder="City, Country"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <Label htmlFor="internStartDate">Start Date</Label>
+                                            <Input
+                                                id="internStartDate"
+                                                type="date"
+                                                value={formData.newInternship.startDate}
+                                                onChange={(e) =>
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        newInternship: { ...prev.newInternship, startDate: e.target.value }
+                                                    }))
+                                                }
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="internEndDate">End Date</Label>
+                                            <Input
+                                                id="internEndDate"
+                                                type="date"
+                                                disabled={formData.newInternship.current}
+                                                value={formData.newInternship.endDate || ''}
+                                                onChange={(e) =>
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        newInternship: { ...prev.newInternship, endDate: e.target.value }
+                                                    }))
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="internCurrent"
+                                        checked={formData.newInternship.current}
+                                        onCheckedChange={(checked) =>
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                newInternship: {
+                                                    ...prev.newInternship,
+                                                    current: Boolean(checked),
+                                                    endDate: checked ? '' : prev.newInternship.endDate
+                                                }
+                                            }))
+                                        }
+                                    />
+                                    <Label htmlFor="internCurrent">I am currently interning here</Label>
+                                </div>
+                                <div>
+                                    <Label htmlFor="internDescription">Responsibilities / Learnings</Label>
+                                    <Textarea
+                                        id="internDescription"
+                                        value={formData.newInternship.description || ''}
+                                        onChange={(e) =>
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                newInternship: { ...prev.newInternship, description: e.target.value }
+                                            }))
+                                        }
+                                        placeholder="Tools, mentorship, accomplishments..."
+                                    />
+                                </div>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={addInternship}
+                                    disabled={!formData.newInternship.company || !formData.newInternship.position}
+                                >
+                                    Add Internship
+                                </Button>
                             </div>
                         </CardContent>
                     </Card>

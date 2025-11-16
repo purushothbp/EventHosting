@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import {
   Calendar,
@@ -13,7 +13,9 @@ import {
   User,
   ArrowLeft,
   Share2,
-  Bookmark
+  Bookmark,
+  Loader2,
+  RefreshCcw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +32,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 interface EventDetailsClientProps {
   event: {
@@ -42,29 +45,58 @@ interface EventDetailsClientProps {
     isFree: boolean;
     price?: number;
     type: string;
-    organization: string | { name: string };
+    organization: string | { name: string; _id?: string };
     department?: string;
-    organizer: string | { name: string };
+    organizer: string | { name: string; _id?: string };
     minTeamSize: number;
     maxTeamSize: number;
     templateUrl?: string;
+    registrationCount?: number;
   };
   eventId: string;
 }
 
+type RegistrationRecord = {
+  _id: string;
+  teamSize: number;
+  status: string;
+  createdAt?: string;
+  user?: {
+    _id?: string;
+    name?: string;
+    email?: string;
+    department?: string;
+    phone?: string;
+    year?: number;
+  } | null;
+};
+
 export default function EventDetailsClient({ event, eventId }: EventDetailsClientProps) {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [teamSize, setTeamSize] = useState(event.minTeamSize);
+  const { data: session, status } = useSession();
+  const [hasRegistered, setHasRegistered] = useState(false);
+  const [checkingRegistration, setCheckingRegistration] = useState(true);
+  const [registrationCount, setRegistrationCount] = useState(event.registrationCount || 0);
+  const [registrations, setRegistrations] = useState<RegistrationRecord[]>([]);
+  const [registrationsLoading, setRegistrationsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
-  const organizationName = typeof event.organization === 'string' 
-    ? event.organization 
+  const organizationName = typeof event.organization === 'string'
+    ? event.organization
     : event.organization?.name || 'Organization';
-  
-  const organizerName = typeof event.organizer === 'string' 
-    ? event.organizer 
+
+  const organizerName = typeof event.organizer === 'string'
+    ? event.organizer
     : event.organizer?.name || 'Organizer';
+  const organizerId = typeof event.organizer === 'object' ? event.organizer?._id : undefined;
+  const eventOrgId = typeof event.organization === 'object' ? event.organization?._id : undefined;
+  const userRole = session?.user?.role;
+  const userOrgId = session?.user?.organization;
+  const sameOrganization = Boolean(eventOrgId && userOrgId && eventOrgId === userOrgId);
+  const privilegedOrgRole = ['admin', 'coordinator', 'staff', 'super-admin'].includes(userRole || '');
 
   const eventDate = new Date(event.date);
   const formattedDate = eventDate.toLocaleDateString('en-US', {
@@ -77,18 +109,152 @@ export default function EventDetailsClient({ event, eventId }: EventDetailsClien
     hour: '2-digit',
     minute: '2-digit',
   });
+  const isPastEvent = eventDate < new Date();
+  const canViewRegistrations = Boolean(session?.user) && (
+    userRole === 'super-admin' ||
+    (privilegedOrgRole && sameOrganization) ||
+    organizerId === session?.user?.id
+  );
+  const registrationButtonText = hasRegistered
+    ? 'You are registered'
+    : isPastEvent
+      ? 'Registration closed'
+      : event.isFree
+        ? 'Register Now'
+        : 'Get Tickets';
+  const registrationButtonDisabled = checkingRegistration || hasRegistered || isPastEvent || status === 'loading';
+
+  useEffect(() => {
+    if (status !== 'authenticated') {
+      setCheckingRegistration(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const fetchStatus = async () => {
+      try {
+        const response = await fetch(`/api/registrations?eventId=${eventId}&scope=self`, {
+          signal: controller.signal
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setHasRegistered(Boolean(data.registered));
+        }
+      } catch (error) {
+        if ((error as DOMException).name !== 'AbortError') {
+          console.error('Failed to fetch registration status:', error);
+        }
+      } finally {
+        setCheckingRegistration(false);
+      }
+    };
+
+    fetchStatus();
+    return () => controller.abort();
+  }, [eventId, status]);
+
+  const fetchRegistrations = useCallback(async () => {
+    if (!canViewRegistrations) return;
+    setRegistrationsLoading(true);
+    try {
+      const response = await fetch(`/api/registrations?eventId=${eventId}&scope=all`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch registrations');
+      }
+      const data = await response.json();
+      setRegistrationCount(data.count ?? data.registrations?.length ?? 0);
+      setRegistrations(data.registrations || []);
+    } catch (error) {
+      console.error('Failed to fetch registrations:', error);
+      toast({
+        title: 'Unable to fetch registrations',
+        description: 'Please try again in a moment.',
+        variant: 'destructive',
+      });
+    } finally {
+      setRegistrationsLoading(false);
+    }
+  }, [canViewRegistrations, eventId, toast]);
+
+  useEffect(() => {
+    if (!canViewRegistrations) return;
+    fetchRegistrations();
+  }, [canViewRegistrations, fetchRegistrations]);
 
   const handleBooking = () => {
+    if (isPastEvent) {
+      toast({
+        title: 'Registrations closed',
+        description: 'This event has already been completed.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (sameOrganization && privilegedOrgRole && userRole !== 'super-admin') {
+      toast({
+        title: 'Action not allowed',
+        description: 'Organizers and staff cannot register for their own events.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (hasRegistered) {
+      toast({
+        title: 'Already registered',
+        description: 'You have already registered for this event.',
+      });
+      return;
+    }
+
+    if (status !== 'authenticated') {
+      const callbackUrl = typeof window !== 'undefined' ? window.location.pathname : `/events/${eventId}`;
+      router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+      return;
+    }
+
     setIsBookingOpen(true);
   };
 
-  const handleConfirmBooking = () => {
-    // Handle booking confirmation
-    setIsBookingOpen(false);
-    toast({
-      title: 'Booking Successful!',
-      description: `You've successfully registered for ${event.title}`,
-    });
+  const handleConfirmBooking = async () => {
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/registrations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          eventId,
+          teamSize,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to register for the event');
+      }
+
+      setHasRegistered(true);
+      setRegistrationCount((prev) => prev + 1);
+      toast({
+        title: 'Registered successfully!',
+        description: `Check your inbox for confirmation for ${event.title}.`,
+      });
+      setIsBookingOpen(false);
+      if (canViewRegistrations) {
+        fetchRegistrations();
+      }
+    } catch (error) {
+      toast({
+        title: 'Registration failed',
+        description: error instanceof Error ? error.message : 'Please try again later.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleShare = async () => {
@@ -109,7 +275,7 @@ export default function EventDetailsClient({ event, eventId }: EventDetailsClien
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto max-w-6xl px-4 py-8 text-slate-900">
       <Button 
         variant="ghost" 
         onClick={() => router.back()}
@@ -118,7 +284,7 @@ export default function EventDetailsClient({ event, eventId }: EventDetailsClien
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Events
       </Button>
 
-      <div className="grid md:grid-cols-3 gap-8">
+      <div className="grid gap-8 rounded-3xl border border-white/30 bg-white/60 px-6 py-8 shadow-xl backdrop-blur md:grid-cols-3">
         <div className="md:col-span-2 space-y-6">
           <div className="relative h-64 md:h-96 w-full rounded-xl overflow-hidden">
             <Image
@@ -215,7 +381,7 @@ export default function EventDetailsClient({ event, eventId }: EventDetailsClien
         </div>
 
         <div className="space-y-6">
-          <Card>
+          <Card className="border border-white/30 bg-white/80 backdrop-blur shadow-lg">
             <CardHeader>
               <CardTitle className="text-2xl">
                 {event.isFree ? 'Free' : `$${event.price}`}
@@ -229,17 +395,80 @@ export default function EventDetailsClient({ event, eventId }: EventDetailsClien
                 className="w-full" 
                 size="lg"
                 onClick={handleBooking}
+                disabled={registrationButtonDisabled}
               >
-                {event.isFree ? 'Register Now' : 'Get Tickets'}
+                {registrationButtonText}
               </Button>
+              {checkingRegistration && (
+                <p className="text-center text-xs text-muted-foreground">Checking your registration status…</p>
+              )}
               <div className="text-sm text-muted-foreground text-center">
                 <CheckCircle className="h-4 w-4 inline-block mr-1 text-green-500" />
                 Secure checkout
               </div>
+          </CardContent>
+        </Card>
+
+        {canViewRegistrations && (
+          <Card className="border border-white/30 bg-white/80 backdrop-blur shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-lg">Registrations</CardTitle>
+              <CardDescription>Attendee overview</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-3xl font-bold">{registrationCount}</p>
+                  <p className="text-sm text-muted-foreground">Total registrations</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={fetchRegistrations}
+                  disabled={registrationsLoading}
+                  title="Refresh registrations"
+                >
+                  {registrationsLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <RefreshCcw className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+              <div className="mt-4 max-h-64 space-y-3 overflow-y-auto pr-1">
+                {registrationsLoading && (
+                  <p className="text-sm text-muted-foreground">Fetching registrations…</p>
+                )}
+                {!registrationsLoading && registrations.length === 0 && (
+                  <p className="text-sm text-muted-foreground">No registrations yet.</p>
+                )}
+                {registrations.map((registration) => (
+                  <div
+                    key={registration._id}
+                    className="rounded-lg border border-white/40 bg-white/90 p-3 shadow-sm"
+                  >
+                    <p className="text-sm font-medium">
+                      {registration.user?.name || 'Unnamed attendee'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {registration.user?.email || 'Email not provided'}
+                    </p>
+                    <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Team size: {registration.teamSize}</span>
+                      <span>
+                        {registration.createdAt
+                          ? new Date(registration.createdAt).toLocaleDateString()
+                          : ''}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
+        )}
 
-          <Card>
+          <Card className="border border-white/30 bg-white/80 backdrop-blur shadow-lg">
             <CardHeader>
               <CardTitle className="text-lg">Organizer</CardTitle>
             </CardHeader>
@@ -325,8 +554,12 @@ export default function EventDetailsClient({ event, eventId }: EventDetailsClien
             <Button variant="outline" onClick={() => setIsBookingOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleConfirmBooking}>
-              {event.isFree ? 'Confirm Registration' : 'Proceed to Payment'}
+            <Button onClick={handleConfirmBooking} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                event.isFree ? 'Confirm Registration' : 'Proceed to Payment'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

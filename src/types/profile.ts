@@ -62,6 +62,17 @@ export interface Certification {
   credentialUrl?: string;
 }
 
+export interface Internship {
+  _id: string;
+  company: string;
+  position: string;
+  location?: string;
+  startDate: string;
+  endDate?: string;
+  current: boolean;
+  description?: string;
+}
+
 export interface UserProfile {
   _id: string;
   name: string;
@@ -71,6 +82,7 @@ export interface UserProfile {
   organizations: Organization[];
   education: Education[];
   experience: Experience[];
+  internships?: Internship[];
   projects: Project[];
   skills: Skill[];
   socialProfiles: SocialProfile[];

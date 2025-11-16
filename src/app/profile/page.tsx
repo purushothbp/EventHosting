@@ -213,6 +213,37 @@ export default function ProfilePage() {
         </Card>
       )}
 
+      {/* Internships Section */}
+      {profile.internships && profile.internships.length > 0 && (
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Internships</CardTitle>
+            <CardDescription>Hands-on experience & industry exposure</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {profile.internships.map((internship) => (
+              <div key={internship._id} className="rounded-lg border border-primary/20 bg-background/60 p-4 shadow-sm">
+                <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <h3 className="font-semibold">{internship.position}</h3>
+                    <p className="text-muted-foreground">{internship.company}</p>
+                    {internship.location && (
+                      <p className="text-sm text-muted-foreground">{internship.location}</p>
+                    )}
+                  </div>
+                  <span className="text-sm text-muted-foreground">
+                    {formatDate(internship.startDate)} - {internship.current ? 'Present' : formatDate(internship.endDate)}
+                  </span>
+                </div>
+                {internship.description && (
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{internship.description}</p>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Experience Section */}
       {profile.experience && profile.experience.length > 0 && (
         <Card className="mb-8">

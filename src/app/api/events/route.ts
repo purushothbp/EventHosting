@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/app/lib/mongo";
-import { Event, IEvent } from "@/models";
+import { Event, IEvent, Registration } from "@/models";
 import mongoose, { Types } from 'mongoose';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/app/auth';
 
 // This ensures models are registered before any database operations
 import '@/models';
@@ -15,10 +15,11 @@ interface IEventWithId extends Omit<IEvent, '_id' | 'organization' | 'organizer'
   date: string;
   createdAt: string;
   updatedAt: string;
+  registrationCount?: number;
 }
 
 // Helper function to serialize event data
-function serializeEvent(event: any): any {
+function serializeEvent(event: any, registrationCount = 0): any {
   return {
     ...event,
     _id: event._id?.toString() || '',
@@ -32,11 +33,12 @@ function serializeEvent(event: any): any {
       name: event.organizer.name || 'Unknown Organizer'
     } : null,
     createdAt: event.createdAt?.toISOString() || new Date().toISOString(),
-    updatedAt: event.updatedAt?.toISOString() || new Date().toISOString()
+    updatedAt: event.updatedAt?.toISOString() || new Date().toISOString(),
+    registrationCount
   };
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     console.log('🔍 [GET /api/events] Connecting to database...');
     
@@ -62,17 +64,48 @@ export async function GET() {
       );
     }
     
-    console.log('🔍 [GET /api/events] Fetching events...');
-    const events = await Event.find()
+    const now = new Date();
+    const url = new URL(request.url);
+    const scope = url.searchParams.get('scope') || 'upcoming';
+    const filter: Record<string, unknown> = {};
+
+    if (scope !== 'all') {
+      filter.completed = { $ne: true };
+      filter.date = { $gte: now };
+    }
+
+    // Auto-complete events that are in the past
+    await Event.updateMany(
+      { date: { $lt: now }, completed: { $ne: true } },
+      { completed: true }
+    );
+
+    console.log('🔍 [GET /api/events] Fetching events with filter:', filter);
+    const events = await Event.find(filter)
       .populate('organization', 'name')
       .populate('organizer', 'name')
-      .sort({ createdAt: -1 })
+      .sort(scope === 'all' ? { createdAt: -1 } : { date: 1 })
       .lean()
       .maxTimeMS(10000); // 10 second timeout
 
+    const eventIds = events.map((event) => event._id);
+    let registrationMap: Record<string, number> = {};
+
+    if (eventIds.length > 0) {
+      const registrations = await Registration.aggregate([
+        { $match: { event: { $in: eventIds } } },
+        { $group: { _id: '$event', count: { $sum: 1 } } }
+      ]);
+
+      registrationMap = registrations.reduce((acc, curr) => {
+        acc[curr._id.toString()] = curr.count;
+        return acc;
+      }, {} as Record<string, number>);
+    }
+
     // Convert all MongoDB objects to plain serializable objects
     const serialized = events.map((event: any) => {
-      const result = serializeEvent(event);
+      const result = serializeEvent(event, registrationMap[event._id.toString()] || 0);
       
       // Remove any undefined or null values that might cause serialization issues
       Object.keys(result).forEach(key => {
@@ -210,11 +243,23 @@ export async function POST(request: Request) {
       });
       
       // Create new event
+      const eventDate = new Date(data.date);
+      const now = new Date();
+      if (isNaN(eventDate.getTime()) || eventDate < now) {
+        return NextResponse.json(
+          { 
+            error: 'Invalid date',
+            message: 'Event date must be in the future'
+          },
+          { status: 400 }
+        );
+      }
+
       const eventData = {
         title: data.title,
         description: data.description,
         location: data.location,
-        date: new Date(data.date),
+        date: eventDate,
         type: data.type,
         isFree: Boolean(data.isFree),
         price: data.isFree ? 0 : Number(data.price) || 0,
@@ -222,6 +267,7 @@ export async function POST(request: Request) {
         maxTeamSize: Math.max(1, Number(data.maxTeamSize) || 1),
         imageUrl: data.imageUrl || '/placeholder-event.jpg',
         department: data.department || '',
+        completed: false,
         organization: data.organizationId ? new Types.ObjectId(data.organizationId) : null,
         organizer: new Types.ObjectId(session.user.id)
       };

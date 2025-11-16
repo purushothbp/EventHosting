@@ -10,7 +10,8 @@ export type Event = {
   price?: number;
   description: string;
   organizer: string;
-  image: string; // image id from placeholder-images.json
+  image?: string; // legacy placeholder image id
+  imageUrl?: string; // direct image URL
   minTeamSize: number;
   maxTeamSize: number;
 };

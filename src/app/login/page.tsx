@@ -21,10 +21,10 @@ export default function LoginPage() {
         </Suspense>
         <div className="text-sm text-center">
           <a 
-            href="/forgot-password" 
+            href="/register" 
             className="font-medium text-blue-600 hover:text-blue-500"
           >
-            Forgot your password?
+            Don't have account <u>Sign up</u> Here 
           </a>
         </div>
       </div>

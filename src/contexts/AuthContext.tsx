@@ -10,6 +10,8 @@ type User = {
   email: string;
   role: string;
   organization?: string;
+  organizationName?: string;
+  organizationLogo?: string;
 };
 
 type AuthContextType = {
@@ -19,6 +21,7 @@ type AuthContextType = {
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  isStaff: boolean;
   isCoordinator: boolean;
 };
 
@@ -60,7 +63,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const user = session?.user as User | null;
   const isAuthenticated = !!user;
   const isAdmin = user?.role === 'admin' || user?.role === 'super-admin';
-  const isCoordinator = user?.role === 'coordinator' || isAdmin;
+  const isStaff = user?.role === 'staff';
+  const isCoordinator = user?.role === 'coordinator' || isStaff || isAdmin;
 
   return (
     <AuthContext.Provider
@@ -71,6 +75,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         logout,
         isAuthenticated,
         isAdmin,
+        isStaff,
         isCoordinator,
       }}
     >

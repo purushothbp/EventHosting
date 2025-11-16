@@ -5,13 +5,16 @@ export interface IUser extends Document {
   clerkId?: string; // Optional for email/password users
   email: string;
   name: string;
+  emailVerified: boolean;
+  otp?: string;
+  otpExpiry?: Date;
   password?: string; // Optional for OAuth users
   avatarUrl?: string;
   organization?: Types.ObjectId | string; // Can be ObjectId or string
   department?: string;
   year?: number;
   interests?: string[];
-  role: 'user' | 'coordinator' | 'admin' | 'super-admin';
+  role: 'user' | 'coordinator' | 'admin' | 'super-admin' | 'staff';
   phone?: string;
   location?: string;
   website?: string;
@@ -52,6 +55,15 @@ export interface IUser extends Document {
     issueDate: string;
     credentialUrl?: string;
   }>;
+  internships?: Array<{
+    company: string;
+    position: string;
+    location?: string;
+    startDate: string;
+    endDate?: string;
+    current: boolean;
+    description?: string;
+  }>;
   createdAt: Date;
   updatedAt: Date;
   comparePassword?(candidatePassword: string): Promise<boolean>;
@@ -59,10 +71,22 @@ export interface IUser extends Document {
 
 const UserSchema: Schema<IUser> = new Schema({
   clerkId: { 
-    type: String, 
-    unique: true, 
-    sparse: true, // Allows null values for email/password users
-    index: true 
+    type: String,
+    sparse: true,
+    default: undefined // This ensures null values are not stored
+  },
+  emailVerified: {
+    type: Boolean,
+    default: false,
+    required: true
+  },
+  otp: {
+    type: String,
+    select: false
+  },
+  otpExpiry: {
+    type: Date,
+    select: false
   },
   email: { 
     type: String, 
@@ -99,7 +123,7 @@ const UserSchema: Schema<IUser> = new Schema({
   role: {
     type: String,
     default: 'user',
-    enum: ['user', 'coordinator', 'admin', 'super-admin'],
+    enum: ['user', 'coordinator', 'staff', 'admin', 'super-admin'],
   },
   phone: { type: String },
   location: { type: String },
@@ -153,6 +177,15 @@ const UserSchema: Schema<IUser> = new Schema({
     issueDate: { type: String, required: true },
     credentialUrl: { type: String }
   }],
+  internships: [{
+    company: { type: String, required: true },
+    position: { type: String, required: true },
+    location: { type: String },
+    startDate: { type: String, required: true },
+    endDate: { type: String },
+    current: { type: Boolean, default: false },
+    description: { type: String }
+  }],
 }, { 
   timestamps: true,
   toJSON: {
@@ -189,4 +222,7 @@ UserSchema.pre<IUser>('save', async function(next) {
   }
 });
 
-export default models.User || model<IUser>('User', UserSchema);
+// Create the model
+const User = models.User || model<IUser>('User', UserSchema);
+
+export default User;

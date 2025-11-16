@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/app/auth';
 import { connectToDatabase } from '@/app/lib/mongo';
 import { Types } from 'mongoose';
 import { Event } from '@/models';
@@ -103,7 +103,8 @@ export async function createEvent(formData: CreateEventParams): Promise<CreateEv
         price: formData.isFree ? 0 : Number(formData.price),
         minTeamSize: Math.max(1, Number(formData.minTeamSize) || 1),
         maxTeamSize: Math.max(1, Number(formData.maxTeamSize) || 1),
-        date: new Date(formData.date)
+        date: new Date(formData.date),
+        completed: false
       };
       
       // Remove undefined values

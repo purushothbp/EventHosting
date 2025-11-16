@@ -69,6 +69,7 @@ export default function Header() {
   const [isMounted, setIsMounted] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [logoFailed, setLogoFailed] = useState(false);
 
   const isActive = (href: string, exactMatch = false) => {
     if (exactMatch) {
@@ -106,10 +107,6 @@ export default function Header() {
       .slice(0, 2);
   };
 
-  if (!isMounted) {
-    return <HeaderSkeleton />;
-  }
-
   const filteredNavLinks = navLinks.filter((link) => {
     if (link.requiresAuth && status !== 'authenticated') return false;
     if (link.requiredRole && status === 'authenticated') {
@@ -119,32 +116,44 @@ export default function Header() {
     return true;
   });
 
-  const organization = (session?.user as any)?.organization;
-  const organizationName = organization?.name || 'Nexus Events';
-  const organizationLogo = organization?.logoUrl || null;
+  const userRole = (session?.user as any)?.role;
+  const canUseOrgBranding = userRole && ['admin', 'coordinator', 'staff'].includes(userRole);
+  const organizationName = canUseOrgBranding && (session?.user as any)?.organizationName
+    ? (session?.user as any)?.organizationName
+    : 'Nexus Events';
+  const organizationLogo = canUseOrgBranding ? (session?.user as any)?.organizationLogo : null;
+
+  useEffect(() => {
+    setLogoFailed(false);
+  }, [organizationLogo, session?.user]);
+
+  if (!isMounted) {
+    return <HeaderSkeleton />;
+  }
+
+  const shouldShowOrgLogo = Boolean(organizationLogo) && !logoFailed;
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-white/20 bg-white/70 shadow-lg backdrop-blur-xl dark:bg-slate-900/80">
       <div className="container flex h-14 sm:h-16 items-center px-4 md:px-6">
         {/* Desktop Navigation */}
         <div className="mr-4 hidden md:flex items-center">
-          <Link href="/" className="mr-6 flex items-center space-x-2">
-            {organizationLogo ? (
-              <img
-                src={organizationLogo}
-                alt={organizationName}
-                className="h-8 w-8 sm:h-9 sm:w-9 rounded-md object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                }}
-              />
-            ) : null}
-            <Activity className={cn(
-              'h-5 w-5 sm:h-6 sm:w-6 text-primary',
-              organizationLogo && 'hidden'
-            )} />
-            <span className="font-bold text-base sm:text-lg">
+          <Link href="/" className="mr-6 flex items-center space-x-3 rounded-full border border-white/40 bg-white/70 px-3 py-1.5 shadow-sm backdrop-blur">
+            {shouldShowOrgLogo ? (
+              <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-white/40 bg-white/60 shadow">
+                <img
+                  src={organizationLogo}
+                  alt={organizationName}
+                  className="h-full w-full object-cover"
+                  onError={(e) => {
+                    setLogoFailed(true);
+                  }}
+                />
+              </span>
+            ) : (
+              <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+            )}
+            <span className="font-bold text-base sm:text-lg text-slate-800">
               {organizationName}
             </span>
           </Link>
@@ -215,7 +224,6 @@ export default function Header() {
                 ) : (
                   <>
                     <LogOut className="mr-2 h-4 w-4" />
-                    Sign out
                   </>
                 )}
               </Button>
@@ -327,7 +335,6 @@ export default function Header() {
                     ) : (
                       <>
                         <LogOut className="mr-2 h-4 w-4" />
-                        Sign out
                       </>
                     )}
                   </Button>

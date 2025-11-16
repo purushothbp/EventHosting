@@ -16,6 +16,7 @@ export interface IEvent extends Document {
   organizer: Types.ObjectId; // Reference to User
   minTeamSize: number;
   maxTeamSize: number;
+  completed: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,6 +36,7 @@ const EventSchema: Schema<IEvent> = new Schema({
   organizer: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   minTeamSize: { type: Number, default: 1 },
   maxTeamSize: { type: Number, default: 1 },
+  completed: { type: Boolean, default: false },
 }, { timestamps: true });
 
 export default models.Event || model<IEvent>('Event', EventSchema);

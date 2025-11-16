@@ -77,6 +77,7 @@ export async function GET() {
       skills: user.skills || [],
       socialProfiles: user.socialProfiles || [],
       certifications: user.certifications || [],
+      internships: user.internships || [],
       createdAt: user.createdAt ? user.createdAt.toISOString() : null,
       updatedAt: user.updatedAt ? user.updatedAt.toISOString() : null
     };
@@ -194,6 +195,18 @@ export async function PUT(request: Request) {
         endDate: exp.endDate || '',
         current: Boolean(exp.current),
         description: exp.description || ''
+      }));
+    }
+
+    if (Array.isArray(updateData.internships)) {
+      updateObj.internships = updateData.internships.map((intern: any) => ({
+        company: intern.company || '',
+        position: intern.position || '',
+        location: intern.location || '',
+        startDate: intern.startDate || '',
+        endDate: intern.endDate || '',
+        current: Boolean(intern.current),
+        description: intern.description || ''
       }));
     }
 

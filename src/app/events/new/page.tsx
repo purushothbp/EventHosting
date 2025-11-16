@@ -106,6 +106,15 @@ export default function NewEventPage() {
       });
       return;
     }
+
+    if (!formData.imageUrl || !formData.imageUrl.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please provide a cover image URL for this event',
+        variant: 'destructive',
+      });
+      return;
+    }
     
     // Team size validation
     if (formData.minTeamSize > formData.maxTeamSize) {
@@ -244,6 +253,22 @@ export default function NewEventPage() {
         <div className="bg-white shadow rounded-lg p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+          <div className="md:col-span-2">
+            <Label htmlFor="imageUrl" className="font-medium text-lg">Event Cover Image URL *</Label>
+            <Input
+              id="imageUrl"
+              name="imageUrl"
+              type="url"
+              value={formData.imageUrl}
+              onChange={handleChange}
+              className="text-md font-normal placeholder:text-neutral-400"
+              placeholder="https://your-bucket.s3.amazonaws.com/event-cover.jpg"
+              required
+            />
+            <p className="mt-1 text-sm text-gray-500">
+              Paste a publicly accessible image link (PNG/JPG/WebP) to highlight your event.
+            </p>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="title" className="block text-sm font-medium text-gray-700">
               Event Title <span className="text-red-500">*</span>

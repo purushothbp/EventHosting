@@ -8,51 +8,57 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin, ArrowRight } from 'lucide-react';
-import type { Event } from '@/app/lib/placeholder-data';
+import type { Event as PlaceholderEvent } from '@/app/lib/placeholder-data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/store/states';
 
+type EventCardData = PlaceholderEvent & {
+  imageUrl?: string;
+};
+
 interface EventCardProps {
-  event: Event;
+  event: EventCardData;
 }
 
 export function EventCard({ event }: EventCardProps) {
-  const image = PlaceHolderImages.find((img) => img.id === event.image);
+  const placeholderImage = event.image
+    ? PlaceHolderImages.find((img) => img.id === event.image)
+    : null;
+  const coverImage =
+    event.imageUrl ||
+    placeholderImage?.imageUrl ||
+    '/placeholder-event.jpg';
   const eventDate = new Date(event.date);
   const router = useRouter();
 
   const { setEventId } = useStore();
 
   const handleViewDetails = (eventId: string) => {
-    console.log("Setting event ID:", eventId);
     setEventId(eventId);
     router.push(`/events/${eventId}`);
   };
 
   return (
-    <Card className="flex flex-col overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 duration-300 ease-in-out">
+    <Card className="flex flex-col overflow-hidden border border-white/30 bg-white/80 shadow-lg backdrop-blur transition-all hover:-translate-y-1 hover:shadow-2xl duration-300 ease-in-out">
       <CardHeader className="p-0">
         <div className="block cursor-pointer" onClick={() => handleViewDetails(event._id)}>
           <div className="relative h-40 sm:h-48 w-full">
-            {image && (
-              <Image
-                src={image.imageUrl}
-                alt={event.title}
-                fill
-                className="object-cover"
-                sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-                data-ai-hint={image.imageHint}
-              />
-            )}
+            <Image
+              src={coverImage}
+              alt={event.title}
+              fill
+              className="object-cover"
+              sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+            />
             <Badge
               className={cn(
                 'absolute top-2 right-2',
                 event.isFree ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600'
               )}
             >
-              {event.isFree ? 'Free' : `Rs ${event.price} /-`}
+              {event.isFree ? 'Free' : `₹${event.price}`}
             </Badge>
           </div>
         </div>

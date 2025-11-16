@@ -2,18 +2,22 @@
 import './user';
 import './event';
 import './organization';
+import './registration';
 
 // Import models
 import User, { IUser } from './user';
 import Event, { IEvent } from './event';
 import Organization, { IOrganization } from './organization';
+import Registration, { IRegistration } from './registration';
 
 // Export all models
 export {
   User,
   Event,
   Organization,
+  Registration,
   type IUser,
   type IEvent,
-  type IOrganization
+  type IOrganization,
+  type IRegistration
 };

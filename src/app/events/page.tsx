@@ -2,16 +2,21 @@
 import HomeClient from "@/app/HomeClient";
 import { connectToDatabase } from "@/app/lib/mongo";
 import Event, { IEvent } from "@/models/event";
-import "@/models/Organization";
+import "@/models/organization";
 import "@/models/user";
 
 export default async function HomePage() {
   await connectToDatabase();
-  
+  const now = new Date();
+
   // Populate organization and organizer references
-  const events = await Event.find()
+  const events = await Event.find({
+      completed: { $ne: true },
+      date: { $gte: now }
+    })
     .populate('organization', 'name')
     .populate('organizer', 'name')
+    .sort({ date: 1 })
     .lean<IEvent[]>();
 
   // Convert all MongoDB objects to plain serializable objects
@@ -32,6 +37,7 @@ export default async function HomePage() {
       organizer: event.organizer?.name || 'Unknown Organizer',
       minTeamSize: event.minTeamSize,
       maxTeamSize: event.maxTeamSize,
+      completed: Boolean(event.completed),
       createdAt: event.createdAt ? new Date(event.createdAt).toISOString() : new Date().toISOString(),
       updatedAt: event.updatedAt ? new Date(event.updatedAt).toISOString() : new Date().toISOString()
     };
