@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
+import { Eye, EyeOff } from 'lucide-react';
 
 type FormData = {
   name: string;
@@ -28,6 +29,7 @@ export default function RegisterPage() {
     otp: ''
   });
   const [loading, setLoading] = useState(false);
+  const [showPasswords, setShowPasswords] = useState({ password: false, confirm: false });
   const router = useRouter();
   const { toast } = useToast();
 
@@ -219,34 +221,58 @@ export default function RegisterPage() {
           
           <div>
             <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              required
-              className="mt-1"
-              value={formData.password}
-              onChange={handleChange}
-              minLength={8}
-              disabled={loading}
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                name="password"
+                type={showPasswords.password ? 'text' : 'password'}
+                autoComplete="new-password"
+                required
+                className="mt-1 pr-10"
+                value={formData.password}
+                onChange={handleChange}
+                minLength={8}
+                disabled={loading}
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-3 flex items-center text-muted-foreground"
+                onClick={() =>
+                  setShowPasswords((prev) => ({ ...prev, password: !prev.password }))
+                }
+                tabIndex={-1}
+              >
+                {showPasswords.password ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
           
           <div>
             <Label htmlFor="confirmPassword">Confirm Password</Label>
-            <Input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              autoComplete="new-password"
-              required
-              className="mt-1"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              minLength={8}
-              disabled={loading}
-            />
+            <div className="relative">
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type={showPasswords.confirm ? 'text' : 'password'}
+                autoComplete="new-password"
+                required
+                className="mt-1 pr-10"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                minLength={8}
+                disabled={loading}
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-3 flex items-center text-muted-foreground"
+                onClick={() =>
+                  setShowPasswords((prev) => ({ ...prev, confirm: !prev.confirm }))
+                }
+                tabIndex={-1}
+              >
+                {showPasswords.confirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
         </div>
 

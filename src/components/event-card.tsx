@@ -8,13 +8,21 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin, ArrowRight } from 'lucide-react';
-import type { Event as PlaceholderEvent } from '@/app/lib/placeholder-data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/store/states';
 
-type EventCardData = PlaceholderEvent & {
+type EventCardData = {
+  _id: string;
+  title: string;
+  date: string;
+  location: string;
+  description?: string;
+  type: string;
+  isFree: boolean;
+  price?: number;
+  image?: string;
   imageUrl?: string;
 };
 

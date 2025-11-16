@@ -7,10 +7,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { PlusCircle, IndianRupee, Loader2 } from 'lucide-react';
+import { PlusCircle, IndianRupee, Loader2, LayoutGrid, Rows } from 'lucide-react';
 import Link from 'next/link';
 import EventsTable from '@/components/EventsTable';
 import TeamManagementCard from '@/components/TeamManagementCard';
+import EventsGrid from '@/components/EventsGrid';
 
 interface DashboardEvent {
   _id: string;
@@ -52,10 +53,10 @@ export default function DashboardPage() {
   const [registrationsOpen, setRegistrationsOpen] = useState(false);
   const [registrationDetails, setRegistrationDetails] = useState<RegistrationDetail[]>([]);
   const [registrationLoading, setRegistrationLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const router = useRouter();
 
   useEffect(() => {
-    if (!isAuthenticated) return;
     const userOrgId = user?.organization;
     const shouldRestrictByOrg = Boolean(
       userOrgId &&
@@ -63,6 +64,7 @@ export default function DashboardPage() {
     );
 
     const fetchEvents = async () => {
+      setLoading(true);
       try {
         const response = await fetch('/api/events?scope=all');
         if (!response.ok) {
@@ -93,7 +95,7 @@ export default function DashboardPage() {
     };
 
     fetchEvents();
-  }, [isAuthenticated, user?.organization, user?.organizationName, user?.role]);
+  }, [user?.organization, user?.organizationName, user?.role]);
 
   const handleViewRegistrations = async (event: { _id: string; title: string; date: string }) => {
     setSelectedEvent(event);
@@ -126,26 +128,58 @@ export default function DashboardPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        {canManageEvents && (
-          <Link href="/events/new">
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Create Event
-            </Button>
-          </Link>
-        )}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-8">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">
+            Switch between grid and table layouts to manage your events.
+          </p>
+        </div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="gap-2 border border-white/30 bg-white/70 shadow-sm"
+            onClick={() => setViewMode((prev) => (prev === 'grid' ? 'table' : 'grid'))}
+          >
+            {viewMode === 'grid' ? (
+              <>
+                <Rows className="h-4 w-4" /> List View
+              </>
+            ) : (
+              <>
+                <LayoutGrid className="h-4 w-4" /> Grid View
+              </>
+            )}
+          </Button>
+          {canManageEvents && (
+            <Link href="/events/new">
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Create Event
+              </Button>
+            </Link>
+          )}
+        </div>
       </div>
 
       <Card className="border border-white/30 bg-white/80 shadow-xl backdrop-blur">
         <CardContent className="p-6">
-          <EventsTable
-            events={events}
-            loading={loading}
-            onViewRegistrations={canManageEvents ? handleViewRegistrations : undefined}
-            showActions={canManageEvents}
-          />
+          {viewMode === 'grid' ? (
+            <EventsGrid
+              events={events}
+              loading={loading}
+              emptyMessage="No events available yet. Create one to get started."
+            />
+          ) : (
+            <EventsTable
+              events={events}
+              loading={loading}
+              onViewRegistrations={canManageEvents ? handleViewRegistrations : undefined}
+              showActions={canManageEvents}
+            />
+          )}
         </CardContent>
       </Card>
 

@@ -115,14 +115,18 @@ export default function EventDetailsClient({ event, eventId }: EventDetailsClien
     (privilegedOrgRole && sameOrganization) ||
     organizerId === session?.user?.id
   );
-  const registrationButtonText = hasRegistered
-    ? 'You are registered'
-    : isPastEvent
-      ? 'Registration closed'
-      : event.isFree
-        ? 'Register Now'
-        : 'Get Tickets';
-  const registrationButtonDisabled = checkingRegistration || hasRegistered || isPastEvent || status === 'loading';
+  const isAuthenticated = status === 'authenticated';
+  const registrationButtonText = !isAuthenticated
+    ? 'Log in to register'
+    : hasRegistered
+      ? 'You are registered'
+      : isPastEvent
+        ? 'Registration closed'
+        : event.isFree
+          ? 'Register Now'
+          : 'Get Tickets';
+  const registrationButtonDisabled =
+    checkingRegistration || hasRegistered || isPastEvent || status === 'loading';
 
   useEffect(() => {
     if (status !== 'authenticated') {
@@ -399,6 +403,11 @@ export default function EventDetailsClient({ event, eventId }: EventDetailsClien
               >
                 {registrationButtonText}
               </Button>
+              {!isAuthenticated && !isPastEvent && (
+                <p className="text-center text-sm text-muted-foreground">
+                  Please log in to complete your registration.
+                </p>
+              )}
               {checkingRegistration && (
                 <p className="text-center text-xs text-muted-foreground">Checking your registration status…</p>
               )}

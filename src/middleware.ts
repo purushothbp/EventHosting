@@ -3,8 +3,16 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 
-const publicRoutes = ['/login', '/forgot-password', '/reset-password', '/api/auth'];
-const protectedRoutes = ['/dashboard', '/events', '/profile', '/admin'];
+const publicRoutes = [
+  '/login',
+  '/register',
+  '/forgot-password',
+  '/reset-password',
+  '/events',
+  '/api/auth',
+];
+
+const protectedRoutes = ['/dashboard', '/profile', '/admin', '/events/new'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
