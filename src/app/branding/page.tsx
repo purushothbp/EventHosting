@@ -1,32 +1,21 @@
-'use client';
-
-import { useToast } from '@/hooks/use-toast';
+import HomeClient from '@/app/HomeClient';
 import { connectToDatabase } from '@/app/lib/mongo';
 import Event, { IEvent } from '@/models/event';
-import HomeClient from '@/app/HomeClient';
+import '@/models/organization';
+import '@/models/user';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function BrandingPage() {
-  const { toast } = useToast();
-
-  const handleBrandingUpdate = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    toast({
-      title: 'Branding Updated!',
-      description:
-        'Your organization branding information has been saved successfully.',
-    });
-    // In a real app, this would handle file uploads and form data.
-  };
   await connectToDatabase();
 
-  // Populate organization and organizer references
   const events = await Event.find()
     .populate('organization', 'name')
     .populate('organizer', 'name')
     .lean<IEvent[]>();
 
-  // Convert all MongoDB objects to plain serializable objects
-  const serialized = events.map(e => {
+  const serialized = events.map((e) => {
     const event = e as any;
     return {
       _id: event._id.toString(),
@@ -44,7 +33,7 @@ export default async function BrandingPage() {
       minTeamSize: event.minTeamSize,
       maxTeamSize: event.maxTeamSize,
       createdAt: event.createdAt ? new Date(event.createdAt).toISOString() : new Date().toISOString(),
-      updatedAt: event.updatedAt ? new Date(event.updatedAt).toISOString() : new Date().toISOString()
+      updatedAt: event.updatedAt ? new Date(event.updatedAt).toISOString() : new Date().toISOString(),
     };
   });
 

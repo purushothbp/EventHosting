@@ -5,6 +5,9 @@ import Event, { IEvent } from "@/models/event";
 import "@/models/organization";
 import "@/models/user";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function HomePage() {
   await connectToDatabase();
   const now = new Date();
