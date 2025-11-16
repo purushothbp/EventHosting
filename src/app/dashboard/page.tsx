@@ -184,12 +184,20 @@ export default function DashboardPage() {
       </Card>
 
       {(() => {
+        if (!user) return null;
+        const role = user.role;
+        if (role !== 'admin' && role !== 'super-admin' && role !== 'staff') {
+          return null;
+        }
+
         const allowedRoles: Array<'staff' | 'coordinator'> = [];
-        if (user?.role === 'admin' || user?.role === 'super-admin') {
+        if (role === 'admin' || role === 'super-admin') {
           allowedRoles.push('staff', 'coordinator');
-        } else if (user?.role === 'staff') {
+        }
+        if (role === 'staff') {
           allowedRoles.push('coordinator');
         }
+
         if (!allowedRoles.length) return null;
         return (
           <div className="mt-8">
