@@ -185,20 +185,20 @@ export default function DashboardPage() {
 
       {(() => {
         if (!user) return null;
-        const role = user.role;
-        if (role !== 'admin' && role !== 'super-admin' && role !== 'staff') {
-          return null;
-        }
-
         const allowedRoles: Array<'staff' | 'coordinator'> = [];
-        if (role === 'admin' || role === 'super-admin') {
+
+        if (isAdmin) {
           allowedRoles.push('staff', 'coordinator');
         }
-        if (role === 'staff') {
+
+        if (isStaff && !isAdmin) {
           allowedRoles.push('coordinator');
         }
 
-        if (!allowedRoles.length) return null;
+        if (!allowedRoles.length) {
+          return null;
+        }
+
         return (
           <div className="mt-8">
             <TeamManagementCard allowedRoles={[...new Set(allowedRoles)]} />
