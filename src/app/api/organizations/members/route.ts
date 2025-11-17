@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/auth';
 import { connectToDatabase } from '@/app/lib/mongo';
-import { User } from '@/models';
+import { User, Organization } from '@/models';
+import { sendOrgInvitationEmail } from '@/lib/email';
+import { hash } from 'bcryptjs';
 
 const ROLE_PERMISSIONS: Record<string, Array<'staff' | 'coordinator'>> = {
   'super-admin': ['staff', 'coordinator'],
@@ -19,9 +21,20 @@ export async function POST(request: Request) {
 
     const { name, email, password, role } = await request.json();
 
-    if (!name || !email || !password || !role) {
+    const trimmedName = typeof name === 'string' ? name.trim() : '';
+    const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+    const rawPassword = typeof password === 'string' ? password.trim() : '';
+
+    if (!trimmedName || !normalizedEmail || !rawPassword || !role) {
       return NextResponse.json(
         { error: 'Name, email, password, and role are required' },
+        { status: 400 }
+      );
+    }
+
+    if (rawPassword.length < 8) {
+      return NextResponse.json(
+        { error: 'Password must be at least 8 characters long' },
         { status: 400 }
       );
     }
@@ -53,7 +66,16 @@ export async function POST(request: Request) {
 
     await connectToDatabase();
 
-    const existingUser = await User.findOne({ email: email.toLowerCase() }).lean();
+    const organization = await Organization.findById(creatorOrgId)
+      .lean<{ name: string } | null>();
+    if (!organization) {
+      return NextResponse.json(
+        { error: 'Organization not found' },
+        { status: 404 }
+      );
+    }
+
+    const existingUser = await User.findOne({ email: normalizedEmail }).lean();
     if (existingUser) {
       return NextResponse.json(
         { error: 'An account with this email already exists' },
@@ -61,16 +83,31 @@ export async function POST(request: Request) {
       );
     }
 
+    const hashedPassword = await hash(rawPassword, 12);
+
     const newUser = new User({
-      name,
-      email: email.toLowerCase(),
-      password,
+      name: trimmedName,
+      email: normalizedEmail,
+      password: hashedPassword,
       role,
       organization: creatorOrgId,
       emailVerified: true,
     });
 
     await newUser.save();
+
+    try {
+      await sendOrgInvitationEmail({
+        email: newUser.email,
+        name: trimmedName,
+        temporaryPassword: rawPassword,
+        role,
+        organizationName: organization.name,
+        invitedBy: session.user.name || 'Administrator',
+      });
+    } catch (inviteError) {
+      console.error('Failed to send invitation email:', inviteError);
+    }
 
     return NextResponse.json(
       { success: true, userId: newUser._id.toString() },

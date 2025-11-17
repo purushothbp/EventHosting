@@ -84,3 +84,50 @@ export async function sendEventRegistrationEmail({ email, eventTitle, eventDate,
     console.error('Error sending registration email:', error);
   }
 }
+
+interface OrgInvitationPayload {
+  email: string;
+  name: string;
+  temporaryPassword: string;
+  role: 'staff' | 'coordinator';
+  organizationName: string;
+  invitedBy?: string;
+}
+
+export async function sendOrgInvitationEmail({
+  email,
+  name,
+  temporaryPassword,
+  role,
+  organizationName,
+  invitedBy,
+}: OrgInvitationPayload) {
+  const mailOptions = {
+    from: `"${process.env.NEXT_EMAIL_FROM}" <${process.env.NEXT_SMTP_USER}>`,
+    to: email,
+    subject: `You're invited to ${organizationName} on Nexus Events`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; padding: 24px; border-radius: 12px; border: 1px solid #e5e7eb; background: #ffffff;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h1 style="color: #111827; margin-bottom: 4px;">${organizationName}</h1>
+          <p style="color: #6b7280; margin: 0;">Team Invitation</p>
+        </div>
+        <p style="color: #111827;">Hi ${name},</p>
+        <p style="color: #4b5563;">${invitedBy || 'One of your admins'} has invited you to join <strong>${organizationName}</strong> as a <strong>${role}</strong> on Nexus Events.</p>
+        <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; margin: 20px 0;">
+          <p style="margin: 0; color: #111827;"><strong>Login Email:</strong> ${email}</p>
+          <p style="margin: 8px 0 0 0; color: #111827;"><strong>Temporary Password:</strong> ${temporaryPassword}</p>
+        </div>
+        <p style="color: #4b5563;">Use these credentials to log in and then update your password from the profile settings.</p>
+        <p style="color: #4b5563;">Need help? Reply to this email or contact your administrator.</p>
+        <p style="margin-top: 32px; color: #6b7280; font-size: 13px;">If you were not expecting this invitation, please ignore this email.</p>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error('Error sending organization invitation email:', error);
+  }
+}
