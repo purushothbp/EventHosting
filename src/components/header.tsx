@@ -8,6 +8,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import {
   Activity,
@@ -20,6 +21,7 @@ import {
   LogIn,
   UserPlus,
   Loader2,
+  NotebookPen,
 } from 'lucide-react';
 
 type NavLink = {
@@ -37,6 +39,12 @@ const navLinks: NavLink[] = [
     label: 'Events', 
     icon: Home,
     matchExact: false
+  },
+  {
+    href: '/blog',
+    label: 'Blog',
+    icon: NotebookPen,
+    matchExact: false,
   },
   { 
     href: '/dashboard', 
@@ -70,6 +78,7 @@ export default function Header() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [logoFailed, setLogoFailed] = useState(false);
+  const { toast } = useToast();
 
   const isActive = (href: string, exactMatch = false) => {
     if (exactMatch) {
@@ -90,8 +99,10 @@ export default function Header() {
       await signOut({ redirect: false });
       router.push('/login');
       router.refresh();
+      toast.success('Logged out.');
     } catch (error) {
       console.error('Logout error:', error);
+      toast.error('Failed to log out. Please try again.');
     } finally {
       setIsLoggingOut(false);
     }
@@ -301,7 +312,7 @@ export default function Header() {
                   </button>
                 </div>
               </div>
-              <nav className="flex-1 space-y-1 p-4">
+              <nav className="flex-1 space-y-1 p-4 bg-white">
                 {filteredNavLinks.map(({ href, label, icon: Icon, matchExact = false }) => (
                   <Link
                     key={href}

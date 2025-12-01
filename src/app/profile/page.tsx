@@ -100,10 +100,8 @@ export default function ProfilePage() {
         setProfile(data);
       } catch (error) {
         console.error('Error fetching profile:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load profile data',
-          variant: 'destructive',
+        toast.error('Failed to load profile data.', {
+          title: 'Profile unavailable',
         });
       } finally {
         setLoading(false);

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +18,7 @@ type FormData = {
   otp?: string;
 };
 
-type Step = 'register' | 'verify' | 'success';
+type Step = 'register' | 'verify';
 
 export default function RegisterPage() {
   const [step, setStep] = useState<Step>('register');
@@ -46,11 +47,7 @@ export default function RegisterPage() {
     
     // Basic validation
     if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: 'Error',
-        description: 'Passwords do not match',
-        variant: 'destructive',
-      });
+      toast.error('Passwords do not match.');
       return;
     }
 
@@ -84,10 +81,7 @@ export default function RegisterPage() {
       // Move to OTP verification step if registration was successful
       if (data.success) {
         setStep('verify');
-        toast({
-          title: 'Verification',
-          description: data.message || 'Verification OTP sent to your email',
-        });
+        toast.info(data.message || 'Verification OTP sent to your email.');
       }
 
     } catch (error: any) {
@@ -96,17 +90,14 @@ export default function RegisterPage() {
       // Show user-friendly error messages
       const errorMessage = error.message || 'Failed to register. Please try again.';
       
-      toast({
-        title: 'Registration Error',
-        description: errorMessage,
-        variant: 'destructive',
+      toast.error(errorMessage, {
+        title: 'Registration error',
       });
       
       // If it's a duplicate email error, suggest logging in
       if (errorMessage.includes('already exists') || errorMessage.includes('already registered')) {
-        toast({
-          title: 'Account Exists',
-          description: 'Would you like to log in instead?',
+        toast.info('This account already exists. You can log in instead.', {
+          title: 'Account exists',
           action: (
             <Link href="/login" className="text-white underline">
               Go to Login
@@ -123,11 +114,7 @@ export default function RegisterPage() {
     e.preventDefault();
     
     if (!formData.otp) {
-      toast({
-        title: 'Error',
-        description: 'Please enter the OTP',
-        variant: 'destructive',
-      });
+      toast.warning('Please enter the OTP.');
       return;
     }
 
@@ -151,23 +138,22 @@ export default function RegisterPage() {
         throw new Error(data.message || 'Verification failed');
       }
 
-      setStep('success');
-      toast({
-        title: 'Success',
-        description: 'Email verified successfully! Redirecting to login...',
+      const signInResult = await signIn('credentials', {
+        redirect: false,
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password,
       });
 
-      // Redirect to login after a short delay
-      setTimeout(() => {
-        router.push('/login');
-      }, 2000);
+      if (signInResult?.error) {
+        throw new Error(signInResult.error);
+      }
+
+      toast.success('Account created successfully! You are now logged in.');
+      router.push('/');
+      router.refresh();
 
     } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to verify OTP',
-        variant: 'destructive',
-      });
+      toast.error(error.message || 'Failed to complete registration.');
     } finally {
       setLoading(false);
     }
@@ -340,38 +326,11 @@ export default function RegisterPage() {
     </div>
   );
 
-  const renderSuccess = () => (
-    <div className="text-center space-y-6">
-      <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
-        <svg
-          className="h-6 w-6 text-green-600"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M5 13l4 4L19 7"
-          />
-        </svg>
-      </div>
-      <h2 className="text-2xl font-bold text-gray-900">
-        Account Verified!
-      </h2>
-      <p className="text-gray-600">
-        Your account has been successfully verified. Redirecting to login...
-      </p>
-    </div>
-  );
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         {step === 'register' && renderRegisterForm()}
         {step === 'verify' && renderVerificationForm()}
-        {step === 'success' && renderSuccess()}
       </div>
     </div>
   );

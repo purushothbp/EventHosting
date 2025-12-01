@@ -42,7 +42,7 @@ export async function connectToDatabase() {
       console.log('MongoDB connected successfully');
       
       // Verify models are registered
-      const models = ['User', 'Event', 'Organization'];
+      const models = ['User', 'Event', 'Organization', 'BlogPost', 'BlogComment'];
       models.forEach(model => {
         if (!mongoose.models[model]) {
           console.error(`⚠️ ${model} model is not registered`);

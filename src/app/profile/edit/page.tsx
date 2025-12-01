@@ -190,11 +190,7 @@ export default function EditProfilePage() {
                     updatedAt: profileData.updatedAt || new Date().toISOString()
                 });
             } catch (err) {
-                toast({
-                    title: 'Error',
-                    description: 'Failed to load profile',
-                    variant: 'destructive',
-                });
+                toast.error('Failed to load profile.');
             } finally {
                 setLoading(false);
             }
@@ -360,19 +356,12 @@ export default function EditProfilePage() {
 
             if (!response.ok) throw new Error('Failed to save profile');
 
-            toast({
-                title: 'Success',
-                description: 'Profile updated successfully',
-            });
+            toast.success('Profile updated successfully');
 
             router.push('/profile');
         } catch (err) {
             console.error('Error saving profile:', err);
-            toast({
-                title: 'Error',
-                description: 'Failed to save profile',
-                variant: 'destructive',
-            });
+            toast.error('Failed to save profile.');
         } finally {
             setSaving(false);
         }
@@ -380,11 +369,7 @@ export default function EditProfilePage() {
 
     const handleSaveProfile = async () => {
         if (!session) {
-            toast({
-                title: 'Error',
-                description: 'You must be logged in to save your profile.',
-                variant: 'destructive',
-            });
+            toast.error('You must be logged in to save your profile.');
             return;
         }
 
@@ -449,10 +434,7 @@ export default function EditProfilePage() {
 
             const result = await response.json();
 
-            toast({
-                title: 'Success',
-                description: 'Your profile has been updated successfully!',
-            });
+            toast.success('Your profile has been updated successfully!');
 
             // Redirect to the profile page
             router.push('/profile');
@@ -460,11 +442,7 @@ export default function EditProfilePage() {
 
         } catch (error) {
             console.error('Error saving profile:', error);
-            toast({
-                title: 'Error',
-                description: 'Failed to save profile. Please try again.',
-                variant: 'destructive',
-            });
+            toast.error('Failed to save profile. Please try again.');
         } finally {
             setSaving(false);
         }

@@ -19,16 +19,12 @@ export default function LoginForm() {
   useEffect(() => {
     const error = searchParams.get('error');
     if (error === 'AccessDenied') {
-      toast({
-        title: 'Access Denied',
-        description: 'You do not have permission to access this page.',
-        variant: 'destructive',
+      toast.error('You do not have permission to access this page.', {
+        title: 'Access denied',
       });
     } else if (error === 'SessionExpired') {
-      toast({
-        title: 'Session Expired',
-        description: 'Your session has expired. Please log in again.',
-        variant: 'destructive',
+      toast.warning('Your session has expired. Please log in again.', {
+        title: 'Session expired',
       });
     }
   }, [searchParams, toast]);
@@ -38,11 +34,7 @@ export default function LoginForm() {
     
     // Basic validation
     if (!email || !password) {
-      toast({
-        title: 'Error',
-        description: 'Please enter both email and password',
-        variant: 'destructive',
-      });
+      toast.warning('Please enter both email and password.');
       return;
     }
 
@@ -64,15 +56,9 @@ export default function LoginForm() {
           ? 'Invalid email or password. Please try again.'
           : 'An error occurred during login. Please try again.';
         
-        toast({
-          title: 'Login Failed',
-          description: errorMessage,
-          variant: 'destructive',
-        });
+        toast.error(errorMessage || 'Login failed.');
       } else {
-        // Handle successful login
-        toast({
-          title: 'Login Successful',
+        toast.success('Logged in successfully.', {
           description: 'Redirecting to your dashboard...',
         });
         
@@ -82,10 +68,8 @@ export default function LoginForm() {
       }
     } catch (error) {
       console.error('Login error:', error);
-      toast({
-        title: 'Error',
-        description: 'An unexpected error occurred. Please try again later.',
-        variant: 'destructive',
+      toast.error('An unexpected error occurred. Please try again later.', {
+        title: 'Something went wrong',
       });
     } finally {
       setIsLoading(false);
