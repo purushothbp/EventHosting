@@ -2,11 +2,19 @@
   "version": 2,
   "framework": "nextjs",
   "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "devCommand": "npm run dev",
   "outputDirectory": ".next",
+  "functions": {
+    "api/**": {
+      "runtime": "nodejs18.x",
+      "maxDuration": 60
+    }
+  },
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
     }
   ]
 }
