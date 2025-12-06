@@ -6,6 +6,14 @@ import { authOptions } from '@/app/auth';
 import { Event, Registration, User } from '@/models';
 import { sendEventRegistrationEmail } from '@/lib/email';
 
+type ParticipantPayload = {
+  name?: string;
+  email?: string;
+};
+
+const isValidEmail = (value: string) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -13,7 +21,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { eventId, teamSize = 1 } = await request.json();
+    const { eventId, teamSize = 1, participants = [] } = await request.json();
     if (!eventId || !Types.ObjectId.isValid(eventId)) {
       return NextResponse.json({ error: 'Invalid event id' }, { status: 400 });
     }
@@ -70,10 +78,83 @@ export async function POST(request: Request) {
       );
     }
 
+    const normalizedTeamSize = Number(teamSize) || 1;
+    if (normalizedTeamSize < event.minTeamSize || normalizedTeamSize > event.maxTeamSize) {
+      return NextResponse.json(
+        { error: `Team size must be between ${event.minTeamSize} and ${event.maxTeamSize}` },
+        { status: 400 }
+      );
+    }
+
+    const additionalParticipants: ParticipantPayload[] = Array.isArray(participants)
+      ? participants.map((participant: ParticipantPayload) => ({
+          name: participant?.name?.trim(),
+          email: participant?.email?.trim().toLowerCase(),
+        }))
+      : [];
+
+    if (normalizedTeamSize === 1 && additionalParticipants.length > 0) {
+      return NextResponse.json(
+        { error: 'Additional participants provided for a solo registration' },
+        { status: 400 }
+      );
+    }
+
+    if (normalizedTeamSize > 1 && additionalParticipants.length !== normalizedTeamSize - 1) {
+      return NextResponse.json(
+        { error: 'Please provide details for all additional team members' },
+        { status: 400 }
+      );
+    }
+
+    for (const participant of additionalParticipants) {
+      if (!participant.name || !participant.email) {
+        return NextResponse.json(
+          { error: 'Each additional participant must include a name and email' },
+          { status: 400 }
+        );
+      }
+      if (!isValidEmail(participant.email)) {
+        return NextResponse.json(
+          { error: `Invalid email address for participant ${participant.name}` },
+          { status: 400 }
+        );
+      }
+    }
+
+    const primaryParticipantEmail = session.user.email?.toLowerCase();
+    const emailSet = new Set<string>();
+    if (primaryParticipantEmail) {
+      emailSet.add(primaryParticipantEmail);
+    }
+    for (const participant of additionalParticipants) {
+      if (emailSet.has(participant.email!)) {
+        return NextResponse.json(
+          { error: 'Participant emails must be unique' },
+          { status: 400 }
+        );
+      }
+      emailSet.add(participant.email!);
+    }
+
+    const participantsPayload = [
+      {
+        name: session.user.name || 'Primary Participant',
+        email: primaryParticipantEmail || `${session.user.id}@placeholder.local`,
+        isPrimary: true,
+      },
+      ...additionalParticipants.map((participant) => ({
+        name: participant.name!,
+        email: participant.email!,
+        isPrimary: false,
+      })),
+    ];
+
     const registration = new Registration({
       event: new Types.ObjectId(eventId),
       user: new Types.ObjectId(session.user.id),
-      teamSize: Number(teamSize) || 1
+      teamSize: normalizedTeamSize,
+      participants: participantsPayload,
     });
 
     await registration.save();
@@ -155,7 +236,12 @@ export async function GET(request: Request) {
           department: (registration.user as any).department,
           phone: (registration.user as any).phone,
           year: (registration.user as any).year
-        } : null
+        } : null,
+        participants: (registration.participants || []).map((participant) => ({
+          name: participant.name,
+          email: participant.email,
+          isPrimary: participant.isPrimary,
+        })),
       }));
 
       return NextResponse.json({

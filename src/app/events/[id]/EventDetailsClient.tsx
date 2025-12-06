@@ -15,7 +15,9 @@ import {
   Share2,
   Bookmark,
   Loader2,
-  RefreshCcw
+  RefreshCcw,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -56,6 +58,12 @@ interface EventDetailsClientProps {
   eventId: string;
 }
 
+type RegistrationParticipant = {
+  name: string;
+  email: string;
+  isPrimary: boolean;
+};
+
 type RegistrationRecord = {
   _id: string;
   teamSize: number;
@@ -69,11 +77,15 @@ type RegistrationRecord = {
     phone?: string;
     year?: number;
   } | null;
+  participants?: RegistrationParticipant[];
 };
 
 export default function EventDetailsClient({ event, eventId }: EventDetailsClientProps) {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [teamSize, setTeamSize] = useState(event.minTeamSize);
+  const [additionalParticipants, setAdditionalParticipants] = useState<{ name: string; email: string }[]>(
+    () => Array.from({ length: Math.max(0, event.minTeamSize - 1) }, () => ({ name: '', email: '' }))
+  );
   const { data: session, status } = useSession();
   const [hasRegistered, setHasRegistered] = useState(false);
   const [checkingRegistration, setCheckingRegistration] = useState(true);
@@ -81,8 +93,10 @@ export default function EventDetailsClient({ event, eventId }: EventDetailsClien
   const [registrations, setRegistrations] = useState<RegistrationRecord[]>([]);
   const [registrationsLoading, setRegistrationsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [expandedRegistrationId, setExpandedRegistrationId] = useState<string | null>(null);
   const { toast } = useToast();
   const router = useRouter();
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const organizationName = typeof event.organization === 'string'
     ? event.organization
@@ -157,6 +171,20 @@ export default function EventDetailsClient({ event, eventId }: EventDetailsClien
     return () => controller.abort();
   }, [eventId, status]);
 
+  useEffect(() => {
+    const requiredAdditional = Math.max(0, teamSize - 1);
+    setAdditionalParticipants((prev) => {
+      if (prev.length === requiredAdditional) return prev;
+      if (prev.length < requiredAdditional) {
+        return [
+          ...prev,
+          ...Array.from({ length: requiredAdditional - prev.length }, () => ({ name: '', email: '' })),
+        ];
+      }
+      return prev.slice(0, requiredAdditional);
+    });
+  }, [teamSize]);
+
   const fetchRegistrations = useCallback(async () => {
     if (!canViewRegistrations) return;
     setRegistrationsLoading(true);
@@ -221,7 +249,61 @@ export default function EventDetailsClient({ event, eventId }: EventDetailsClien
     setIsBookingOpen(true);
   };
 
+  const handleParticipantChange = (
+    index: number,
+    field: 'name' | 'email',
+    value: string
+  ) => {
+    setAdditionalParticipants((prev) =>
+      prev.map((participant, idx) =>
+        idx === index ? { ...participant, [field]: value } : participant
+      )
+    );
+  };
+
   const handleConfirmBooking = async () => {
+    let sanitizedParticipants: { name: string; email: string }[] = [];
+    if (teamSize > 1) {
+      sanitizedParticipants = additionalParticipants.map((participant) => ({
+        name: participant.name.trim(),
+        email: participant.email.trim().toLowerCase(),
+      }));
+
+      if (sanitizedParticipants.some((participant) => !participant.name || !participant.email)) {
+        toast({
+          title: 'Missing participant details',
+          description: 'Please enter the name and email for each team member.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (sanitizedParticipants.some((participant) => !emailRegex.test(participant.email))) {
+        toast({
+          title: 'Invalid email',
+          description: 'Please enter a valid email for each team member.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const emailSet = new Set<string>();
+      if (session?.user?.email) {
+        emailSet.add(session.user.email.toLowerCase());
+      }
+      for (const participant of sanitizedParticipants) {
+        if (emailSet.has(participant.email)) {
+          toast({
+            title: 'Duplicate participant',
+            description: 'Each participant must have a unique email address.',
+            variant: 'destructive',
+          });
+          return;
+        }
+        emailSet.add(participant.email);
+      }
+    }
+
     setIsSubmitting(true);
     try {
       const response = await fetch('/api/registrations', {
@@ -232,6 +314,7 @@ export default function EventDetailsClient({ event, eventId }: EventDetailsClien
         body: JSON.stringify({
           eventId,
           teamSize,
+          participants: sanitizedParticipants,
         }),
       });
 
@@ -456,20 +539,74 @@ export default function EventDetailsClient({ event, eventId }: EventDetailsClien
                     key={registration._id}
                     className="rounded-lg border border-white/40 bg-white/90 p-3 shadow-sm"
                   >
-                    <p className="text-sm font-medium">
-                      {registration.user?.name || 'Unnamed attendee'}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {registration.user?.email || 'Email not provided'}
-                    </p>
-                    <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                      <span>Team size: {registration.teamSize}</span>
-                      <span>
-                        {registration.createdAt
-                          ? new Date(registration.createdAt).toLocaleDateString()
-                          : ''}
-                      </span>
-                    </div>
+                    {(() => {
+                      const primaryParticipant = registration.participants?.find((participant) => participant.isPrimary);
+                      const otherParticipants = (registration.participants || []).filter((participant) => !participant.isPrimary);
+                      const fallbackName = registration.user?.name || 'Unnamed attendee';
+                      const fallbackEmail = registration.user?.email || 'Email not provided';
+                      const isExpanded = expandedRegistrationId === registration._id;
+
+                      return (
+                        <div className="space-y-2">
+                          <div>
+                            <p className="text-sm font-medium">
+                              {primaryParticipant?.name || fallbackName}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {primaryParticipant?.email || fallbackEmail}
+                            </p>
+                          </div>
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>
+                              {registration.teamSize > 1
+                                ? `Team of ${registration.teamSize}`
+                                : 'Solo participant'}
+                            </span>
+                            <span>
+                              {registration.createdAt
+                                ? new Date(registration.createdAt).toLocaleDateString()
+                                : ''}
+                            </span>
+                          </div>
+                          {otherParticipants.length > 0 && (
+                            <div className="pt-1">
+                              <Button
+                                variant="link"
+                                size="sm"
+                                className="h-6 px-0 text-xs"
+                                onClick={() =>
+                                  setExpandedRegistrationId((prev) =>
+                                    prev === registration._id ? null : registration._id
+                                  )
+                                }
+                              >
+                                {isExpanded ? (
+                                  <>
+                                    Hide {otherParticipants.length} other participant{otherParticipants.length > 1 ? 's' : ''}
+                                    <ChevronUp className="ml-1 h-3 w-3" />
+                                  </>
+                                ) : (
+                                  <>
+                                    View {otherParticipants.length} other participant{otherParticipants.length > 1 ? 's' : ''}
+                                    <ChevronDown className="ml-1 h-3 w-3" />
+                                  </>
+                                )}
+                              </Button>
+                              {isExpanded && (
+                                <div className="mt-2 space-y-2 rounded-md bg-slate-50 p-2 text-xs">
+                                  {otherParticipants.map((participant, index) => (
+                                    <div key={`${registration._id}-participant-${index}`}>
+                                      <p className="font-medium text-slate-700">{participant.name}</p>
+                                      <p className="text-muted-foreground">{participant.email}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 ))}
               </div>
@@ -555,6 +692,40 @@ export default function EventDetailsClient({ event, eventId }: EventDetailsClien
                 <p className="text-sm text-muted-foreground">
                   {teamSize} x ${event.price} per person
                 </p>
+              </div>
+            )}
+
+            {teamSize > 1 && (
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-sm font-semibold">Team Members</h4>
+                  <p className="text-xs text-muted-foreground">You will be registered as the primary participant. Provide details for the remaining team members.</p>
+                </div>
+                {additionalParticipants.map((participant, index) => (
+                  <div key={`participant-${index}`} className="space-y-3 rounded-md border p-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div className="space-y-1">
+                        <Label htmlFor={`participant-name-${index}`}>Member {index + 2} Name</Label>
+                        <Input
+                          id={`participant-name-${index}`}
+                          value={participant.name}
+                          onChange={(e) => handleParticipantChange(index, 'name', e.target.value)}
+                          placeholder="Full name"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor={`participant-email-${index}`}>Member {index + 2} Email</Label>
+                        <Input
+                          id={`participant-email-${index}`}
+                          type="email"
+                          value={participant.email}
+                          onChange={(e) => handleParticipantChange(index, 'email', e.target.value)}
+                          placeholder="name@example.com"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
