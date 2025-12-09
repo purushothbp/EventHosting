@@ -15,7 +15,7 @@ export default function LoginForm() {
   const router = useRouter();
   const { toast } = useToast();
 
-  // Check for authentication errors in URL
+  // Check for authentication errors or redirect reasons in URL
   useEffect(() => {
     const error = searchParams.get('error');
     if (error === 'AccessDenied') {
@@ -26,6 +26,18 @@ export default function LoginForm() {
       toast.warning('Your session has expired. Please log in again.', {
         title: 'Session expired',
       });
+    }
+
+    const reason = searchParams.get('reason');
+    if (reason === 'account-exists') {
+      toast.info('Your account is already set up. Please log in to continue.', {
+        title: 'Account found',
+      });
+    }
+
+    const prefillEmail = searchParams.get('email');
+    if (prefillEmail) {
+      setEmail(prefillEmail);
     }
   }, [searchParams, toast]);
 

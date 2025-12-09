@@ -9,6 +9,14 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import {
   Activity,
@@ -22,6 +30,7 @@ import {
   UserPlus,
   Loader2,
   NotebookPen,
+  Bell,
 } from 'lucide-react';
 
 type NavLink = {
@@ -59,7 +68,7 @@ const navLinks: NavLink[] = [
     icon: Building, 
     requiresAuth: true,
     matchExact: false,
-    requiredRole: ['super-admin']
+    requiredRole: ['super-admin', 'admin', 'coordinator', 'staff']
   },
   { 
     href: '/profile', 
@@ -78,6 +87,8 @@ export default function Header() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [logoFailed, setLogoFailed] = useState(false);
+  const [upcomingRegistrations, setUpcomingRegistrations] = useState<Array<{ id: string; teamSize: number; event?: { title?: string; date?: string; location?: string } | null }>>([]);
+  const [loadingNotifications, setLoadingNotifications] = useState(false);
   const { toast } = useToast();
 
   const isActive = (href: string, exactMatch = false) => {
@@ -138,11 +149,34 @@ export default function Header() {
     setLogoFailed(false);
   }, [organizationLogo, session?.user]);
 
+  useEffect(() => {
+    const loadNotifications = async () => {
+      if (status !== 'authenticated') {
+        setUpcomingRegistrations([]);
+        return;
+      }
+      try {
+        setLoadingNotifications(true);
+        const response = await fetch('/api/registrations?scope=upcoming');
+        if (!response.ok) return;
+        const data = await response.json();
+        setUpcomingRegistrations(data.registrations || []);
+      } catch (error) {
+        console.error('Failed to load registrations', error);
+      } finally {
+        setLoadingNotifications(false);
+      }
+    };
+
+    loadNotifications();
+  }, [status]);
+
   if (!isMounted) {
     return <HeaderSkeleton />;
   }
 
   const shouldShowOrgLogo = Boolean(organizationLogo) && !logoFailed;
+  const notificationCount = upcomingRegistrations.length;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/20 bg-white/70 shadow-lg backdrop-blur-xl dark:bg-slate-900/80">
@@ -206,6 +240,49 @@ export default function Header() {
             <Skeleton className="h-8 w-8 rounded-full" />
           ) : status === 'authenticated' ? (
             <div className="flex items-center space-x-4">
+              {status === 'authenticated' && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="relative">
+                      <Bell className="h-5 w-5" />
+                      {notificationCount > 0 && (
+                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-semibold text-white">
+                          {notificationCount}
+                        </span>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-72">
+                    <DropdownMenuLabel>Upcoming registrations</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {loadingNotifications && (
+                      <DropdownMenuItem className="text-muted-foreground text-sm">
+                        Checking events...
+                      </DropdownMenuItem>
+                    )}
+                    {!loadingNotifications && notificationCount === 0 && (
+                      <DropdownMenuItem className="text-muted-foreground text-sm">
+                        No upcoming events yet.
+                      </DropdownMenuItem>
+                    )}
+                    {upcomingRegistrations.map((registration) => (
+                      <DropdownMenuItem key={registration.id} className="flex flex-col items-start gap-0">
+                        <p className="text-sm font-medium">{registration.event?.title || 'Event'}</p>
+                        {registration.event?.date && (
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(registration.event.date).toLocaleDateString()}
+                          </p>
+                        )}
+                        <p className="text-xs text-muted-foreground">
+                          {registration.teamSize > 1
+                            ? `Team of ${registration.teamSize}`
+                            : 'Solo registration'}
+                        </p>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
               <Button
                 variant="ghost"
                 className="relative h-8 w-8 sm:h-9 sm:w-9 rounded-full"

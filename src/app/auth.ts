@@ -1,5 +1,6 @@
 import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import GoogleProvider from 'next-auth/providers/google';
 import { compare } from 'bcryptjs';
 import { connectToDatabase } from '@/app/lib/mongo';
 import User, { IUser } from '@/models/user';
@@ -9,9 +10,30 @@ interface IUserWithPassword extends Omit<IUser, 'password'> {
   password?: string;
 }
 
-export const authOptions: NextAuthOptions = {
-  providers: [
-    CredentialsProvider({
+const getGoogleCredentials = () => {
+  const raw = process.env.GOOGLE_OAUTH_CREDENTIALS;
+  if (!raw) return null;
+  try {
+    if (raw.trim().startsWith('{')) {
+      const parsed = JSON.parse(raw);
+      if (parsed.clientId && parsed.clientSecret) {
+        return parsed;
+      }
+    }
+    if (raw.includes('|')) {
+      const [clientId, clientSecret] = raw.split('|').map((value) => value.trim());
+      if (clientId && clientSecret) {
+        return { clientId, clientSecret };
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to parse GOOGLE_OAUTH_CREDENTIALS:', error);
+  }
+  return null;
+};
+
+const providers = [
+  CredentialsProvider({
       name: 'Credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
@@ -65,7 +87,20 @@ export const authOptions: NextAuthOptions = {
         }
       }
     })
-  ],
+];
+
+const googleCreds = getGoogleCredentials();
+if (googleCreds) {
+  providers.push(
+    GoogleProvider({
+      clientId: googleCreds.clientId,
+      clientSecret: googleCreds.clientSecret,
+    })
+  );
+}
+
+export const authOptions: NextAuthOptions = {
+  providers,
   callbacks: {
     async jwt({ token, user }) {
       if (user) {

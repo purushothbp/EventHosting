@@ -53,10 +53,12 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { 
           success: false,
-          message: 'An account with this email already exists. Please try logging in instead.',
-          field: 'email'
+          message: 'An account with this email already exists. Please log in instead.',
+          field: 'email',
+          redirectToLogin: true,
+          email: normalizedEmail
         },
-        { status: 400 }
+        { status: 409 }
       );
     }
 

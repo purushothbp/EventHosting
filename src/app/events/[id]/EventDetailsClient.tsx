@@ -78,6 +78,13 @@ type RegistrationRecord = {
     year?: number;
   } | null;
   participants?: RegistrationParticipant[];
+  event?: {
+    id?: string;
+    title?: string;
+    date?: string;
+    imageUrl?: string;
+    location?: string;
+  } | null;
 };
 
 export default function EventDetailsClient({ event, eventId }: EventDetailsClientProps) {

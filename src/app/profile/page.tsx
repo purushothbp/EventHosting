@@ -64,6 +64,7 @@ type Skill = {
 };
 
 type UserProfile = Omit<SharedUserProfile, 'certifications'> & {
+  _id: string;
   certifications?: Array<{
     name: string;
     issuer: string;
@@ -127,6 +128,25 @@ export default function ProfilePage() {
     return `${formatDate(startDate)} - ${formatDate(endDate)}`;
   };
 
+  const handleShareProfile = async () => {
+    if (!profile?._id) return;
+    const shareUrl = `${window.location.origin}/profiles/${profile._id}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${profile.name} · Resume`,
+          url: shareUrl,
+        });
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        toast.info('Profile link copied to clipboard.');
+      }
+    } catch (error) {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.info('Profile link copied to clipboard.');
+    }
+  };
+
   if (loading || !profile) {
     return (
       <div className="container mx-auto py-8">
@@ -162,6 +182,9 @@ export default function ProfilePage() {
           <Button variant="outline" onClick={() => router.push('/profile/edit')}>
             <Edit className="mr-2 h-4 w-4" />
             Edit Profile
+          </Button>
+          <Button variant="outline" onClick={handleShareProfile}>
+            Share Profile
           </Button>
         </div>
       </div>

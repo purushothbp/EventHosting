@@ -43,13 +43,13 @@ export async function sendVerificationEmail(email: string, otp: string) {
 }
 
 interface RegistrationEmailPayload {
-  email: string;
+  recipients: string[];
   eventTitle: string;
   eventDate: Date;
   organizationName?: string;
 }
 
-export async function sendEventRegistrationEmail({ email, eventTitle, eventDate, organizationName = 'Nexus Events' }: RegistrationEmailPayload) {
+export async function sendEventRegistrationEmail({ recipients, eventTitle, eventDate, organizationName = 'Nexus Events' }: RegistrationEmailPayload) {
   const formattedDate = eventDate
     ? new Date(eventDate).toLocaleString('en-IN', {
         dateStyle: 'full',
@@ -57,11 +57,7 @@ export async function sendEventRegistrationEmail({ email, eventTitle, eventDate,
       })
     : '';
 
-  const mailOptions = {
-    from: `"${process.env.NEXT_EMAIL_FROM}" <${process.env.NEXT_SMTP_USER}>`,
-    to: email,
-    subject: `You're registered for ${eventTitle}`,
-    html: `
+  const html = `
       <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; padding: 24px; border-radius: 12px; border: 1px solid #e5e7eb; background: #ffffff;">
         <div style="text-align: center; margin-bottom: 24px;">
           <h1 style="color: #111827; margin-bottom: 4px;">${organizationName}</h1>
@@ -75,14 +71,23 @@ export async function sendEventRegistrationEmail({ email, eventTitle, eventDate,
         <p style="color: #4b5563; margin-top: 0;">You'll receive further updates from the organizer if there are any changes. We can't wait to see you there!</p>
         <p style="margin-top: 32px; color: #6b7280; font-size: 13px;">If you didn't make this registration, please contact support immediately.</p>
       </div>
-    `
-  };
+    `;
 
-  try {
-    await transporter.sendMail(mailOptions);
-  } catch (error) {
-    console.error('Error sending registration email:', error);
-  }
+  const uniqueRecipients = Array.from(new Set(recipients.filter(Boolean)));
+  await Promise.all(
+    uniqueRecipients.map(async (email) => {
+      try {
+        await transporter.sendMail({
+          from: `"${process.env.NEXT_EMAIL_FROM}" <${process.env.NEXT_SMTP_USER}>`,
+          to: email,
+          subject: `You're registered for ${eventTitle}`,
+          html,
+        });
+      } catch (error) {
+        console.error('Error sending registration email:', email, error);
+      }
+    })
+  );
 }
 
 interface OrgInvitationPayload {

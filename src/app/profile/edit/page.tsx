@@ -16,6 +16,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 
 import { UserProfile, Education, Experience, Project, Skill, SocialProfile, Certification, Internship } from '@/types/profile';
 
+const CITY_OPTIONS = ['Bengaluru', 'Chennai', 'Hyderabad', 'Mumbai', 'Delhi', 'Kolkata', 'Pune', 'Ahmedabad', 'Coimbatore', 'Other'];
+const ROLE_OPTIONS = ['student', 'intern', 'coordinator', 'staff', 'admin', 'super-admin', 'mentor', 'other'];
+const DEGREE_OPTIONS = ['B.Tech', 'B.E', 'B.Sc', 'BCA', 'MBA', 'M.Tech', 'MCA', 'PhD', 'Diploma', 'Other'];
+const FIELD_OPTIONS = ['Computer Science', 'Electronics', 'Mechanical', 'Civil', 'Information Technology', 'Business Administration', 'Design', 'Humanities', 'Other'];
+
 type CollectionItem<T> = Omit<T, '_id'> & { _id?: string; id: string; isNew?: boolean };
 
 interface ProfileFormData extends Omit<UserProfile, 'education' | 'experience' | 'projects' | 'skills' | 'socialProfiles' | 'certifications' | 'internships' | 'image' | 'resumeUrl'> {
@@ -559,12 +564,20 @@ export default function EditProfilePage() {
                                     />
                                 </div>
                                 <div>
-                                    <Label htmlFor="location">Location</Label>
-                                    <Input
+                                    <Label htmlFor="location">City</Label>
+                                    <select
                                         id="location"
                                         value={formData.location || ''}
                                         onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                    />
+                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                    >
+                                        <option value="">Select city</option>
+                                        {CITY_OPTIONS.map((city) => (
+                                            <option key={city} value={city}>
+                                                {city}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div>
                                     <Label htmlFor="website">Website/Portfolio</Label>
@@ -578,13 +591,20 @@ export default function EditProfilePage() {
                                 </div>
                                 <div>
                                     <Label htmlFor="role">Professional Title/Role *</Label>
-                                    <Input
+                                    <select
                                         id="role"
                                         value={formData.role || ''}
                                         onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                                         required
-                                        placeholder="e.g., Software Engineer"
-                                    />
+                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                    >
+                                        <option value="">Select role</option>
+                                        {ROLE_OPTIONS.map((role) => (
+                                            <option key={role} value={role}>
+                                                {role.charAt(0).toUpperCase() + role.slice(1)}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                             </div>
 
@@ -967,7 +987,7 @@ export default function EditProfilePage() {
                                     </div>
                                     <div>
                                         <Label htmlFor="eduDegree">Degree *</Label>
-                                        <Input
+                                        <select
                                             id="eduDegree"
                                             value={formData.newEducation.degree}
                                             onChange={(e) =>
@@ -979,12 +999,19 @@ export default function EditProfilePage() {
                                                     },
                                                 })
                                             }
-                                            placeholder="e.g., Bachelor of Science"
-                                        />
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                        >
+                                            <option value="">Select degree</option>
+                                            {DEGREE_OPTIONS.map((degree) => (
+                                                <option key={degree} value={degree}>
+                                                    {degree}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
                                     <div>
                                         <Label htmlFor="eduField">Field of Study</Label>
-                                        <Input
+                                        <select
                                             id="eduField"
                                             value={formData.newEducation.field}
                                             onChange={(e) =>
@@ -996,8 +1023,15 @@ export default function EditProfilePage() {
                                                     },
                                                 })
                                             }
-                                            placeholder="e.g., Computer Science"
-                                        />
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                        >
+                                            <option value="">Select field</option>
+                                            {FIELD_OPTIONS.map((field) => (
+                                                <option key={field} value={field}>
+                                                    {field}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
                                     <div>
                                         <Label htmlFor="eduGPA">GPA</Label>

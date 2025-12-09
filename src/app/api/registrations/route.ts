@@ -159,14 +159,13 @@ export async function POST(request: Request) {
 
     await registration.save();
 
-    if (session.user.email) {
-      await sendEventRegistrationEmail({
-        email: session.user.email,
-        eventTitle: event.title,
-        eventDate: event.date,
-        organizationName: (event.organization as any)?.name || 'Nexus Events'
-      });
-    }
+    const notificationRecipients = participantsPayload.map((participant) => participant.email);
+    await sendEventRegistrationEmail({
+      recipients: notificationRecipients,
+      eventTitle: event.title,
+      eventDate: event.date,
+      organizationName: (event.organization as any)?.name || 'Nexus Events'
+    });
 
     return NextResponse.json({
       success: true,
@@ -189,14 +188,49 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const eventId = searchParams.get('eventId');
     const scope = searchParams.get('scope') || 'self';
 
+    await connectToDatabase();
+
+    if (scope === 'upcoming' || scope === 'past') {
+      const registrations = await Registration.find({
+        user: new Types.ObjectId(session.user.id),
+      })
+        .populate('event', 'title date imageUrl location completed')
+        .lean();
+
+      const now = new Date();
+      const filtered = registrations
+        .filter((registration) => {
+          if (!registration.event || !(registration.event as any).date) return false;
+          const eventDate = new Date((registration.event as any).date);
+          if (scope === 'upcoming') {
+            return eventDate >= now && !(registration.event as any).completed;
+          }
+          return eventDate < now || Boolean((registration.event as any).completed);
+        })
+        .map((registration) => ({
+          id: (registration._id as Types.ObjectId).toString(),
+          teamSize: registration.teamSize,
+          event: registration.event
+            ? {
+                id: (registration.event as any)._id?.toString(),
+                title: (registration.event as any).title,
+                date: (registration.event as any).date,
+                imageUrl: (registration.event as any).imageUrl,
+                location: (registration.event as any).location,
+                completed: (registration.event as any).completed,
+              }
+            : null,
+        }));
+
+      return NextResponse.json({ registrations: filtered });
+    }
+
+    const eventId = searchParams.get('eventId');
     if (!eventId || !Types.ObjectId.isValid(eventId)) {
       return NextResponse.json({ error: 'Invalid event id' }, { status: 400 });
     }
-
-    await connectToDatabase();
 
     if (scope === 'all') {
       const event = await Event.findById(eventId).select('organizer organization').lean<any>();
@@ -237,7 +271,7 @@ export async function GET(request: Request) {
           phone: (registration.user as any).phone,
           year: (registration.user as any).year
         } : null,
-        participants: (registration.participants || []).map((participant) => ({
+        participants: (registration.participants || []).map((participant:any) => ({
           name: participant.name,
           email: participant.email,
           isPrimary: participant.isPrimary,

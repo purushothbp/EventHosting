@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ export default function NewEventPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [imageErrored, setImageErrored] = useState(false);
   // Get user session
   const { data: session } = useSession();
   
@@ -73,6 +75,10 @@ export default function NewEventPage() {
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
     }));
   };
+
+  useEffect(() => {
+    setImageErrored(false);
+  }, [formData.imageUrl]);
 
   // Handle date change
   const handleDateChange = (date: Date | null) => {
@@ -252,7 +258,7 @@ export default function NewEventPage() {
         
         <div className="bg-white shadow rounded-lg p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           <div className="md:col-span-2">
             <Label htmlFor="imageUrl" className="font-medium text-lg">Event Cover Image URL *</Label>
             <Input
@@ -268,6 +274,25 @@ export default function NewEventPage() {
             <p className="mt-1 text-sm text-gray-500">
               Paste a publicly accessible image link (PNG/JPG/WebP) to highlight your event.
             </p>
+            <div className="mt-4">
+              <Label className="text-sm text-muted-foreground">Preview</Label>
+              <div className="relative mt-2 h-48 w-full overflow-hidden rounded-md border">
+                {formData.imageUrl ? (
+                  <Image
+                    src={imageErrored ? '/placeholder-event.jpg' : formData.imageUrl}
+                    alt={formData.title || 'Event preview'}
+                    fill
+                    className="object-cover"
+                    onError={() => setImageErrored(true)}
+                    sizes="(max-width: 768px) 100vw, 768px"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                    Provide an image URL to preview the cover.
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="title" className="block text-sm font-medium text-gray-700">

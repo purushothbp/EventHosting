@@ -15,3 +15,6 @@ MONGO_URI=mongodb://username:password@localhost:27017/eventhosting
 # 2. Replace 'username', 'password', 'cluster0.xxxxx' with your actual MongoDB credentials
 # 3. Save as .env file in the project root
 # 4. Restart your development server
+
+# Google OAuth
+# GOOGLE_OAUTH_CREDENTIALS={"clientId":"your-google-client-id","clientSecret":"your-google-client-secret"}

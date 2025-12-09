@@ -54,6 +54,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
+      const normalizedEmail = formData.email.trim().toLowerCase();
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
@@ -61,7 +62,7 @@ export default function RegisterPage() {
         },
         body: JSON.stringify({
           name: formData.name,
-          email: formData.email,
+          email: normalizedEmail,
           password: formData.password,
         }),
       });
@@ -69,6 +70,13 @@ export default function RegisterPage() {
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 409 && data?.redirectToLogin) {
+          toast.info('An account with this email already exists. Please log in to continue.', {
+            title: 'Account found',
+          });
+          router.push(`/login?reason=account-exists&email=${encodeURIComponent(data.email || normalizedEmail)}`);
+          return;
+        }
         // If we have a field-specific error, highlight that field
         if (data.field) {
           // You can add field-specific error handling here if needed
@@ -121,13 +129,14 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
+      const normalizedEmail = formData.email.trim().toLowerCase();
       const response = await fetch('/api/auth/verify-otp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: formData.email,
+          email: normalizedEmail,
           otp: formData.otp,
         }),
       });
@@ -140,7 +149,7 @@ export default function RegisterPage() {
 
       const signInResult = await signIn('credentials', {
         redirect: false,
-        email: formData.email.trim().toLowerCase(),
+        email: normalizedEmail,
         password: formData.password,
       });
 
