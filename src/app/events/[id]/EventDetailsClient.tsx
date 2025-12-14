@@ -33,8 +33,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 
 interface EventDetailsClientProps {
   event: {
@@ -89,6 +92,8 @@ type RegistrationRecord = {
 
 export default function EventDetailsClient({ event, eventId }: EventDetailsClientProps) {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const [isConsentOpen, setIsConsentOpen] = useState(false);
+  const [hasAcceptedConsent, setHasAcceptedConsent] = useState(false);
   const [teamSize, setTeamSize] = useState(event.minTeamSize);
   const [additionalParticipants, setAdditionalParticipants] = useState<{ name: string; email: string }[]>(
     () => Array.from({ length: Math.max(0, event.minTeamSize - 1) }, () => ({ name: '', email: '' }))
@@ -148,6 +153,16 @@ export default function EventDetailsClient({ event, eventId }: EventDetailsClien
           : 'Get Tickets';
   const registrationButtonDisabled =
     checkingRegistration || hasRegistered || isPastEvent || status === 'loading';
+  const consentPoints = [
+    'Grook acts only as a facilitator between users and event hosts.',
+    'Event content, management, logistics, permissions, and safety are solely the responsibility of the host.',
+    'Users must verify event details and attend at their own discretion.',
+    'Refunds are permitted only under defined conditions as per the Cancellation & Refund Policy.',
+    'Grook may contact you via email, SMS, or WhatsApp regarding booking confirmation, reminders, or event-related updates.',
+    'You are responsible for providing accurate personal details during booking.',
+    'Misconduct, illegal activities, or violation of event rules may result in denied entry without refund.',
+    "By booking, you consent to Grook's Terms of Service, Privacy Policy, Refund Policy & Safety Disclaimer.",
+  ];
 
   useEffect(() => {
     if (status !== 'authenticated') {
@@ -253,7 +268,7 @@ export default function EventDetailsClient({ event, eventId }: EventDetailsClien
       return;
     }
 
-    setIsBookingOpen(true);
+    setIsConsentOpen(true);
   };
 
   const handleParticipantChange = (
@@ -266,6 +281,17 @@ export default function EventDetailsClient({ event, eventId }: EventDetailsClien
         idx === index ? { ...participant, [field]: value } : participant
       )
     );
+  };
+
+  const handleConsentAccept = () => {
+    setIsConsentOpen(false);
+    setIsBookingOpen(true);
+    setHasAcceptedConsent(false);
+  };
+
+  const handleConsentClose = () => {
+    setIsConsentOpen(false);
+    setHasAcceptedConsent(false);
   };
 
   const handleConfirmBooking = async () => {
@@ -452,7 +478,7 @@ export default function EventDetailsClient({ event, eventId }: EventDetailsClien
 
           <div className="space-y-3">
             <h2 className="text-xl font-semibold">About the Event</h2>
-            <p className="text-muted-foreground">{event.description}</p>
+            <p className="text-muted-foreground whitespace-pre-line">{event.description}</p>
           </div>
 
           {event.templateUrl && (
@@ -639,6 +665,68 @@ export default function EventDetailsClient({ event, eventId }: EventDetailsClien
           </Card>
         </div>
       </div>
+
+      {/* Consent Dialog */}
+      <Dialog
+        open={isConsentOpen}
+        onOpenChange={(open) => {
+          setIsConsentOpen(open);
+          if (!open) {
+            setHasAcceptedConsent(false);
+          }
+        }}
+      >
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>User Consent Notice</DialogTitle>
+            <DialogDescription>
+              Please review and accept the booking terms before continuing.
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[420px] pr-4">
+            <div className="space-y-4 text-sm text-muted-foreground">
+              <p className="font-medium text-foreground">By continuing to book tickets through Grook.in, you acknowledge, agree, and consent that:</p>
+              <ol className="list-decimal space-y-2 pl-4">
+                {consentPoints.map((point, index) => (
+                  <li key={`consent-point-${index}`}>{point}</li>
+                ))}
+              </ol>
+              <p>
+                You can read the full{' '}
+                <Link href="/legal#platform-policies" className="text-primary underline">
+                  Platform Policies
+                </Link>{' '}
+                and{' '}
+                <Link href="/legal#host-agreement" className="text-primary underline">
+                  Host Agreement
+                </Link>
+                . For queries, contact{' '}
+                <a href="mailto:teamgrook@gmail.com" className="text-primary underline">
+                  teamgrook@gmail.com
+                </a>.
+              </p>
+            </div>
+          </ScrollArea>
+          <div className="flex items-start gap-3 rounded-md border border-dashed border-primary/30 bg-primary/5 p-4">
+            <Checkbox
+              id="consentAccepted"
+              checked={hasAcceptedConsent}
+              onCheckedChange={(checked) => setHasAcceptedConsent(Boolean(checked))}
+            />
+            <label htmlFor="consentAccepted" className="text-sm leading-relaxed text-foreground">
+              I have read and agree to the above conditions, and I voluntarily choose to proceed with the booking.
+            </label>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleConsentClose}>
+              Cancel / Go Back
+            </Button>
+            <Button onClick={handleConsentAccept} disabled={!hasAcceptedConsent}>
+              I Agree — Continue to Book
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Booking Dialog */}
       <Dialog open={isBookingOpen} onOpenChange={setIsBookingOpen}>

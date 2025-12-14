@@ -5,6 +5,7 @@ import './globals.css';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { SessionProvider } from 'next-auth/react';
 import Header from '@/components/header';
+import { Footer } from '@/components/footer';
 import { Toaster } from '@/components/ui/toaster';
 
 export default function RootLayout({
@@ -22,6 +23,7 @@ export default function RootLayout({
               <main className="flex-1 h-full w-full">
                 {children}
               </main>
+              <Footer />
             </div>
             <Toaster />
           </AuthProvider>

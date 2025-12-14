@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -51,7 +52,8 @@ interface RegistrationDetail {
 }
 
 export default function DashboardPage() {
-  const { user, isAuthenticated, isAdmin, isCoordinator, isStaff } = useAuth();
+  const { data: sessionData } = useSession();
+  const { user } = useAuth();
   const [events, setEvents] = useState<DashboardEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<Partial<DashboardEvent> | null>(null);
@@ -73,14 +75,20 @@ export default function DashboardPage() {
     [events]
   );
   const showHero = viewMode === 'grid' && heroEvents.length > 0;
+  const sessionUser = sessionData?.user as any;
+  const sessionRole = sessionUser?.role;
+  const sessionOrgId = sessionUser?.organization;
+  const sessionOrgName = sessionUser?.organizationName;
+  const effectiveRole = (user?.role || sessionRole || 'user').toLowerCase();
+  const userOrgId = user?.organization || sessionOrgId;
+  const resolvedOrgName = (user as any)?.organizationName || sessionOrgName;
+  const canManageEvents = ['admin', 'staff', 'coordinator', 'super-admin'].includes(effectiveRole);
+  const shouldRestrictByOrg = Boolean(
+    userOrgId &&
+    ['admin', 'staff', 'coordinator'].includes(effectiveRole)
+  );
 
   useEffect(() => {
-    const userOrgId = user?.organization;
-    const shouldRestrictByOrg = Boolean(
-      userOrgId &&
-      ['admin', 'staff', 'coordinator'].includes(user?.role || '')
-    );
-
     const fetchEvents = async () => {
       setLoading(true);
       try {
@@ -95,7 +103,7 @@ export default function DashboardPage() {
               if (typeof event.organization === 'string') {
                 return (
                   event.organization === userOrgId ||
-                  event.organization === user?.organizationName
+                  event.organization === resolvedOrgName
                 );
               }
               if (event.organization?._id) {
@@ -113,7 +121,7 @@ export default function DashboardPage() {
     };
 
     fetchEvents();
-  }, [user?.organization, user?.organizationName, user?.role]);
+  }, [userOrgId, resolvedOrgName, effectiveRole]);
 
   const handleViewRegistrations = async (event: { _id: string; title: string; date: string }) => {
     setSelectedEvent(event);
@@ -134,8 +142,6 @@ export default function DashboardPage() {
     }
   };
 
-
-  const canManageEvents = isAdmin || isCoordinator || isStaff;
 
   if (loading) {
     return <div className="flex h-full w-full items-center justify-center">
@@ -228,14 +234,14 @@ export default function DashboardPage() {
         </Card>
 
         {(() => {
-          if (!user) return null;
+          if (!user && !sessionUser) return null;
           const allowedRoles: Array<'staff' | 'coordinator'> = [];
 
-          if (isAdmin) {
+          if (effectiveRole === 'admin' || effectiveRole === 'super-admin') {
             allowedRoles.push('staff', 'coordinator');
           }
 
-          if (isStaff && !isAdmin) {
+          if (effectiveRole === 'staff') {
             allowedRoles.push('coordinator');
           }
 

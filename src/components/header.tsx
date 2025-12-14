@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import {
-  Activity,
   Menu,
   LayoutDashboard,
   User,
@@ -32,6 +31,7 @@ import {
   NotebookPen,
   Bell,
 } from 'lucide-react';
+import { GrookLogo } from '@/components/GrookLogo';
 
 type NavLink = {
   href: string;
@@ -142,7 +142,7 @@ export default function Header() {
   const canUseOrgBranding = userRole && ['admin', 'coordinator', 'staff'].includes(userRole);
   const organizationName = canUseOrgBranding && (session?.user as any)?.organizationName
     ? (session?.user as any)?.organizationName
-    : 'Nexus Events';
+    : 'Grook';
   const organizationLogo = canUseOrgBranding ? (session?.user as any)?.organizationLogo : null;
 
   useEffect(() => {
@@ -196,9 +196,9 @@ export default function Header() {
                 />
               </span>
             ) : (
-              <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+              <GrookLogo compact />
             )}
-            <span className="font-bold text-base sm:text-lg text-slate-800">
+            <span className="hidden text-base font-bold uppercase tracking-[0.3em] text-slate-800 sm:inline">
               {organizationName}
             </span>
           </Link>
@@ -350,22 +350,21 @@ export default function Header() {
                     className="flex items-center space-x-2"
                     onClick={() => setIsSheetOpen(false)}
                   >
-                    {organizationLogo ? (
-                      <img
-                        src={organizationLogo}
-                        alt={organizationName}
-                        className="h-8 w-8 rounded-md"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                        }}
-                      />
-                    ) : null}
-                    <Activity className={cn(
-                      'h-6 w-6 text-primary',
-                      organizationLogo && 'hidden'
-                    )} />
-                    <span className="text-lg font-bold">{organizationName}</span>
+                    <span className="flex items-center gap-2">
+                      {organizationLogo && !logoFailed ? (
+                        <img
+                          src={organizationLogo}
+                          alt={organizationName}
+                          className="h-8 w-8 rounded-md"
+                          onError={() => setLogoFailed(true)}
+                        />
+                      ) : (
+                        <GrookLogo compact />
+                      )}
+                      <span className="text-lg font-bold uppercase tracking-[0.3em]">
+                        {organizationName}
+                      </span>
+                    </span>
                   </Link>
                   <button
                     onClick={() => setIsSheetOpen(false)}

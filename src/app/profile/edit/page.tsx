@@ -51,6 +51,7 @@ export default function EditProfilePage() {
     const [saving, setSaving] = useState(false);
     const [activeTab, setActiveTab] = useState('personal');
     const [interestsInput, setInterestsInput] = useState('');
+    const [projectTechInput, setProjectTechInput] = useState('');
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [formData, setFormData] = useState<ProfileFormData>(() => ({
         _id: '',
@@ -169,9 +170,9 @@ export default function EditProfilePage() {
                         id: intern._id,
                         isNew: false
                     })),
-                    projects: (profileData.projects || []).map(proj => ({
+                    projects: (profileData.projects || []).map((proj, index) => ({
                         ...proj,
-                        id: proj._id,
+                        id: proj._id || `project-${index}`,
                         isNew: false
                     })),
                     skills: (profileData.skills || []).map(skill => ({
@@ -179,9 +180,9 @@ export default function EditProfilePage() {
                         id: skill._id,
                         isNew: false
                     })),
-                    socialProfiles: (profileData.socialProfiles || []).map(profile => ({
+                    socialProfiles: (profileData.socialProfiles || []).map((profile, index) => ({
                         ...profile,
-                        id: `social-${Date.now()}`,
+                        id: (profile as any)._id || `social-${index}`,
                         isNew: false
                     })),
                     certifications: (profileData.certifications || []).map(cert => ({
@@ -302,6 +303,77 @@ export default function EditProfilePage() {
         setFormData(prev => ({
             ...prev,
             internships: prev.internships.filter(intern => intern.id !== id)
+        }));
+    }, []);
+
+    const addProject = useCallback(() => {
+        if (!formData.newProject.name || !formData.newProject.description) return;
+
+        const technologies = projectTechInput
+            ? projectTechInput.split(',').map((tech) => tech.trim()).filter(Boolean)
+            : (formData.newProject.technologies || []);
+
+        setFormData(prev => ({
+            ...prev,
+            projects: [
+                ...prev.projects,
+                {
+                    ...prev.newProject,
+                    technologies,
+                    id: `project-${Date.now()}`,
+                    isNew: true
+                }
+            ],
+            newProject: {
+                name: '',
+                description: '',
+                technologies: [],
+                startDate: '',
+                endDate: '',
+                url: ''
+            }
+        }));
+        setProjectTechInput('');
+    }, [formData.newProject, projectTechInput]);
+
+    const removeProject = useCallback((id: string) => {
+        setFormData(prev => ({
+            ...prev,
+            projects: prev.projects.filter(project => project.id !== id)
+        }));
+    }, []);
+
+    const addSocialProfile = useCallback(() => {
+        if (!formData.newSocialProfile.url) return;
+
+        const normalizedUrl = formData.newSocialProfile.url.startsWith('http')
+            ? formData.newSocialProfile.url
+            : `https://${formData.newSocialProfile.url}`;
+
+        setFormData(prev => ({
+            ...prev,
+            socialProfiles: [
+                ...prev.socialProfiles,
+                {
+                    ...prev.newSocialProfile,
+                    url: normalizedUrl,
+                    username: prev.newSocialProfile.username?.trim(),
+                    id: `social-${Date.now()}`,
+                    isNew: true
+                }
+            ],
+            newSocialProfile: {
+                platform: 'github',
+                url: '',
+                username: ''
+            }
+        }));
+    }, [formData.newSocialProfile]);
+
+    const removeSocialProfile = useCallback((id: string) => {
+        setFormData(prev => ({
+            ...prev,
+            socialProfiles: prev.socialProfiles.filter(profile => profile.id !== id)
         }));
     }, []);
 
@@ -1115,6 +1187,152 @@ export default function EditProfilePage() {
                         </CardContent>
                     </Card>
 
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Projects</CardTitle>
+                            <CardDescription>Highlight products, hackathons, and passion work</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            {formData.projects.length > 0 ? (
+                                formData.projects.map((project) => (
+                                    <div key={project.id} className="rounded-lg border p-4 relative space-y-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => removeProject(project.id)}
+                                            className="absolute right-3 top-3 text-muted-foreground hover:text-destructive"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                        <h4 className="text-base font-semibold">{project.name}</h4>
+                                        {project.url && (
+                                            <a
+                                                href={project.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-sm text-primary underline"
+                                            >
+                                                {project.url}
+                                            </a>
+                                        )}
+                                        <p className="text-xs text-muted-foreground">
+                                            {project.startDate || 'N/A'} - {project.endDate || 'Present'}
+                                        </p>
+                                        {project.description && (
+                                            <p className="text-sm text-muted-foreground">{project.description}</p>
+                                        )}
+                                        {project.technologies && project.technologies.length > 0 && (
+                                            <div className="flex flex-wrap gap-2 pt-2">
+                                                {project.technologies.map((tech, index) => (
+                                                    <span
+                                                        key={`${project.id}-tech-${index}`}
+                                                        className="rounded-full bg-primary/10 px-3 py-1 text-xs text-primary"
+                                                    >
+                                                        {tech}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-sm text-muted-foreground">No projects added yet.</p>
+                            )}
+
+                            <div className="rounded-lg border border-dashed p-4 space-y-4">
+                                <h4 className="font-medium">Add Project</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <Label htmlFor="projectName">Project Name *</Label>
+                                        <Input
+                                            id="projectName"
+                                            value={formData.newProject.name}
+                                            onChange={(e) =>
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    newProject: { ...prev.newProject, name: e.target.value }
+                                                }))
+                                            }
+                                            placeholder="e.g., Campus Community App"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="projectUrl">Project URL</Label>
+                                        <Input
+                                            id="projectUrl"
+                                            value={formData.newProject.url || ''}
+                                            onChange={(e) =>
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    newProject: { ...prev.newProject, url: e.target.value }
+                                                }))
+                                            }
+                                            placeholder="https://"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="projectStartDate">Start Date</Label>
+                                        <Input
+                                            id="projectStartDate"
+                                            type="date"
+                                            value={formData.newProject.startDate || ''}
+                                            onChange={(e) =>
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    newProject: { ...prev.newProject, startDate: e.target.value }
+                                                }))
+                                            }
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="projectEndDate">End Date</Label>
+                                        <Input
+                                            id="projectEndDate"
+                                            type="date"
+                                            value={formData.newProject.endDate || ''}
+                                            onChange={(e) =>
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    newProject: { ...prev.newProject, endDate: e.target.value }
+                                                }))
+                                            }
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <Label htmlFor="projectTechnologies">Technologies</Label>
+                                    <Input
+                                        id="projectTechnologies"
+                                        value={projectTechInput}
+                                        onChange={(e) => setProjectTechInput(e.target.value)}
+                                        placeholder="Comma separated (React, Node.js, MongoDB)"
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="projectDescription">Description *</Label>
+                                    <Textarea
+                                        id="projectDescription"
+                                        value={formData.newProject.description}
+                                        onChange={(e) =>
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                newProject: { ...prev.newProject, description: e.target.value }
+                                            }))
+                                        }
+                                        placeholder="What problem did you solve? What impact did it create?"
+                                    />
+                                </div>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={addProject}
+                                    disabled={!formData.newProject.name || !formData.newProject.description}
+                                >
+                                    Add Project
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+
                     {/* Similar sections for Experience, Projects, etc. would go here */}
                     {/* I'll implement those in the next response to keep the size manageable */}
                 </TabsContent>
@@ -1191,8 +1409,41 @@ export default function EditProfilePage() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
-                            {/* Social profiles list would go here */}
                             <div className="space-y-4">
+                                        {formData.socialProfiles.length > 0 ? (
+                                            <div className="space-y-3">
+                                                {formData.socialProfiles.map((social) => (
+                                                    <div key={social.id} className="flex items-center justify-between rounded-lg border p-3">
+                                                <div>
+                                                    <p className="text-sm font-medium capitalize">{social.platform}</p>
+                                                    {social.username && (
+                                                        <p className="text-xs text-muted-foreground">@{social.username}</p>
+                                                    )}
+                                                    <a
+                                                        href={social.url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-xs text-primary underline break-all"
+                                                    >
+                                                        {social.url}
+                                                    </a>
+                                                </div>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => removeSocialProfile(social.id)}
+                                                >
+                                                    Remove
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-muted-foreground">No social links added yet.</p>
+                                )}
+                            </div>
+                            <div className="space-y-4 border-t pt-4">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div>
                                         <Label htmlFor="socialPlatform">Platform</Label>
@@ -1235,16 +1486,33 @@ export default function EditProfilePage() {
                                             placeholder="yourusername"
                                         />
                                     </div>
-                                    <div className="flex items-end">
-                                        <Button
-                                            type="button"
-                                            className="w-full"
-                                            disabled={!formData.newSocialProfile.platform || !formData.newSocialProfile.username}
-                                        >
-                                            Add Profile
-                                        </Button>
+                                    <div>
+                                        <Label htmlFor="socialUrl">Profile URL *</Label>
+                                        <Input
+                                            id="socialUrl"
+                                            type="url"
+                                            value={formData.newSocialProfile.url || ''}
+                                            onChange={(e) =>
+                                                setFormData({
+                                                    ...formData,
+                                                    newSocialProfile: {
+                                                        ...formData.newSocialProfile,
+                                                        url: e.target.value,
+                                                    },
+                                                })
+                                            }
+                                            placeholder="https://"
+                                        />
                                     </div>
                                 </div>
+                                <Button
+                                    type="button"
+                                    className="w-full md:w-auto"
+                                    onClick={addSocialProfile}
+                                    disabled={!formData.newSocialProfile.url}
+                                >
+                                    Add Profile
+                                </Button>
                             </div>
                         </CardContent>
                     </Card>

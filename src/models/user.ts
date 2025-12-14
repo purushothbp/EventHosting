@@ -49,6 +49,14 @@ export interface IUser extends Document {
     url: string;
     username?: string;
   }>;
+  projects?: Array<{
+    name: string;
+    description?: string;
+    url?: string;
+    technologies?: string[];
+    startDate?: string;
+    endDate?: string;
+  }>;
   certifications?: Array<{
     name: string;
     issuer: string;
@@ -170,6 +178,14 @@ const UserSchema: Schema<IUser> = new Schema({
     },
     url: { type: String, required: true },
     username: { type: String }
+  }],
+  projects: [{
+    name: { type: String, required: true },
+    description: { type: String },
+    url: { type: String },
+    technologies: [{ type: String }],
+    startDate: { type: String },
+    endDate: { type: String }
   }],
   certifications: [{
     name: { type: String, required: true },

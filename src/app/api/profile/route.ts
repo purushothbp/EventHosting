@@ -75,6 +75,7 @@ export async function GET() {
       education: user.education || [],
       experience: user.experience || [],
       skills: user.skills || [],
+      projects: user.projects || [],
       socialProfiles: user.socialProfiles || [],
       certifications: user.certifications || [],
       internships: user.internships || [],
@@ -239,6 +240,19 @@ export async function PUT(request: Request) {
       }));
     }
 
+    if (Array.isArray(updateData.projects)) {
+      updateObj.projects = updateData.projects.map((project: any) => ({
+        name: project.name || '',
+        description: project.description || '',
+        url: project.url || '',
+        technologies: Array.isArray(project.technologies)
+          ? project.technologies.filter((tech: string) => Boolean(tech?.trim()))
+          : (project.technologies ? String(project.technologies).split(',').map((tech: string) => tech.trim()) : []),
+        startDate: project.startDate || '',
+        endDate: project.endDate || ''
+      }));
+    }
+
     if (Array.isArray(updateData.certifications)) {
       updateObj.certifications = updateData.certifications.map((cert: any) => ({
         name: cert.name || '',
@@ -283,6 +297,8 @@ export async function PUT(request: Request) {
       resumeUrl: updatedUser.resumeUrl,
       education: updatedUser.education || [],
       experience: updatedUser.experience || [],
+      internships: updatedUser.internships || [],
+      projects: updatedUser.projects || [],
       skills: updatedUser.skills || [],
       socialProfiles: updatedUser.socialProfiles || [],
       certifications: updatedUser.certifications || [],

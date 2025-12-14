@@ -412,6 +412,27 @@ export default function ProfilePage() {
         </Card>
       )}
 
+      {/* Interests */}
+      {profile.interests && profile.interests.length > 0 && (
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Interests</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {profile.interests.map((interest) => (
+                <span
+                  key={interest}
+                  className="rounded-full bg-primary/10 px-3 py-1 text-sm text-primary"
+                >
+                  {interest}
+                </span>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Social Profiles */}
       {profile.socialProfiles && profile.socialProfiles.length > 0 && (
         <Card>

@@ -164,7 +164,7 @@ export async function POST(request: Request) {
       recipients: notificationRecipients,
       eventTitle: event.title,
       eventDate: event.date,
-      organizationName: (event.organization as any)?.name || 'Nexus Events'
+      organizationName: (event.organization as any)?.name || 'Grook'
     });
 
     return NextResponse.json({

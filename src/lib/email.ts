@@ -14,15 +14,15 @@ export async function sendVerificationEmail(email: string, otp: string) {
   const mailOptions = {
     from: `"${process.env.NEXT_EMAIL_FROM}" <${process.env.NEXT_SMTP_USER}>`,
     to: email,
-    subject: 'Verify Your Email - Nexus Events',
+    subject: 'Verify Your Email - Grook',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
         <div style="text-align: center; margin-bottom: 20px;">
-          <h1 style="color: #4f46e5;">Nexus Events</h1>
+          <h1 style="color: #4f46e5;">Grook</h1>
         </div>
         <h2 style="color: #1f2937; margin-bottom: 20px;">Email Verification</h2>
         <p style="color: #4b5563; margin-bottom: 20px;">
-          Thank you for registering with Nexus Events. Please use the following verification code to complete your registration:
+          Thank you for registering with Grook. Please use the following verification code to complete your registration:
         </p>
         <div style="background-color: #f3f4f6; padding: 15px; text-align: center; border-radius: 6px; margin: 20px 0; font-size: 24px; font-weight: bold; letter-spacing: 2px; color: #1f2937;">
           ${otp}
@@ -49,7 +49,7 @@ interface RegistrationEmailPayload {
   organizationName?: string;
 }
 
-export async function sendEventRegistrationEmail({ recipients, eventTitle, eventDate, organizationName = 'Nexus Events' }: RegistrationEmailPayload) {
+export async function sendEventRegistrationEmail({ recipients, eventTitle, eventDate, organizationName = 'Grook' }: RegistrationEmailPayload) {
   const formattedDate = eventDate
     ? new Date(eventDate).toLocaleString('en-IN', {
         dateStyle: 'full',
@@ -110,7 +110,7 @@ export async function sendOrgInvitationEmail({
   const mailOptions = {
     from: `"${process.env.NEXT_EMAIL_FROM}" <${process.env.NEXT_SMTP_USER}>`,
     to: email,
-    subject: `You're invited to ${organizationName} on Nexus Events`,
+    subject: `You're invited to ${organizationName} on Grook`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; padding: 24px; border-radius: 12px; border: 1px solid #e5e7eb; background: #ffffff;">
         <div style="text-align: center; margin-bottom: 24px;">
@@ -118,7 +118,7 @@ export async function sendOrgInvitationEmail({
           <p style="color: #6b7280; margin: 0;">Team Invitation</p>
         </div>
         <p style="color: #111827;">Hi ${name},</p>
-        <p style="color: #4b5563;">${invitedBy || 'One of your admins'} has invited you to join <strong>${organizationName}</strong> as a <strong>${role}</strong> on Nexus Events.</p>
+        <p style="color: #4b5563;">${invitedBy || 'One of your admins'} has invited you to join <strong>${organizationName}</strong> as a <strong>${role}</strong> on Grook.</p>
         <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; margin: 20px 0;">
           <p style="margin: 0; color: #111827;"><strong>Login Email:</strong> ${email}</p>
           <p style="margin: 8px 0 0 0; color: #111827;"><strong>Temporary Password:</strong> ${temporaryPassword}</p>
