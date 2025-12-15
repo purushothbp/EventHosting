@@ -309,7 +309,7 @@ export default function OrganizationPage() {
                             {event.type}
                           </span>
                           <span className="text-sm font-medium">
-                            {event.isFree ? 'Free' : `$${event.price}`}
+                            {event.isFree ? 'Free' : `₹${event.price}`}
                           </span>
                         </div>
                       </div>

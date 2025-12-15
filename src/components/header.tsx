@@ -31,7 +31,7 @@ import {
   NotebookPen,
   Bell,
 } from 'lucide-react';
-import { GrookLogo } from '@/components/GrookLogo';
+import Image from 'next/image';
 
 type NavLink = {
   href: string;
@@ -43,9 +43,9 @@ type NavLink = {
 };
 
 const navLinks: NavLink[] = [
-  { 
-    href: '/events', 
-    label: 'Events', 
+  {
+    href: '/events',
+    label: 'Events',
     icon: Home,
     matchExact: false
   },
@@ -55,25 +55,25 @@ const navLinks: NavLink[] = [
     icon: NotebookPen,
     matchExact: false,
   },
-  { 
-    href: '/dashboard', 
-    label: 'Dashboard', 
-    icon: LayoutDashboard, 
+  {
+    href: '/dashboard',
+    label: 'Dashboard',
+    icon: LayoutDashboard,
     requiresAuth: true,
     matchExact: true
   },
-  { 
-    href: '/admin/dashboard', 
-    label: 'Admin', 
-    icon: Building, 
+  {
+    href: '/admin/dashboard',
+    label: 'Admin',
+    icon: Building,
     requiresAuth: true,
     matchExact: false,
     requiredRole: ['super-admin', 'admin', 'coordinator', 'staff']
   },
-  { 
-    href: '/profile', 
-    label: 'Profile', 
-    icon: User, 
+  {
+    href: '/profile',
+    label: 'Profile',
+    icon: User,
     requiresAuth: true,
     matchExact: false
   },
@@ -95,9 +95,9 @@ export default function Header() {
     if (exactMatch) {
       return pathname === href;
     }
-    return pathname === href || 
-           pathname.startsWith(`${href}/`) || 
-           (href !== '/' && pathname === `${href}`);
+    return pathname === href ||
+      pathname.startsWith(`${href}/`) ||
+      (href !== '/' && pathname === `${href}`);
   };
 
   useEffect(() => {
@@ -184,20 +184,25 @@ export default function Header() {
         {/* Desktop Navigation */}
         <div className="mr-4 hidden md:flex items-center">
           <Link href="/" className="mr-6 flex items-center space-x-3 rounded-full border border-white/40 bg-white/70 px-3 py-1.5 shadow-sm backdrop-blur">
-            {shouldShowOrgLogo ? (
-              <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-white/40 bg-white/60 shadow">
+            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-white/40 bg-white/60 shadow">
+              {shouldShowOrgLogo ? (
                 <img
                   src={organizationLogo}
                   alt={organizationName}
                   className="h-full w-full object-cover"
-                  onError={(e) => {
-                    setLogoFailed(true);
-                  }}
+                  onError={() => setLogoFailed(true)}
                 />
-              </span>
-            ) : (
-              <GrookLogo compact />
-            )}
+              ) : (
+                <Image
+                  src="/icons/logo.png"
+                  alt="logo"
+                  width={36}
+                  height={36}
+                  className="h-full w-full object-cover"
+                  priority
+                />
+              )}
+            </span>
             <span className="hidden text-base font-bold uppercase tracking-[0.3em] text-slate-800 sm:inline">
               {organizationName}
             </span>
@@ -359,7 +364,14 @@ export default function Header() {
                           onError={() => setLogoFailed(true)}
                         />
                       ) : (
-                        <GrookLogo compact />
+                        <Image
+                          src="/icons/logo.png"
+                          alt="logo"
+                          width={32}
+                          height={36}
+                          className="h-full w-full object-cover"
+                          priority
+                        />
                       )}
                       <span className="text-lg font-bold uppercase tracking-[0.3em]">
                         {organizationName}

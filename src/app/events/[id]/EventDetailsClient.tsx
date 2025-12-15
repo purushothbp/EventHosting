@@ -783,9 +783,9 @@ export default function EventDetailsClient({ event, eventId }: EventDetailsClien
             {!event.isFree && (
               <div className="space-y-2">
                 <Label>Total Amount</Label>
-                <p className="text-2xl font-semibold">${(event?.price??0 * teamSize).toFixed(2)}</p>
+                <p className="text-2xl font-semibold">₹{(event?.price??0 * teamSize).toFixed(2)}</p>
                 <p className="text-sm text-muted-foreground">
-                  {teamSize} x ${event.price} per person
+                  {teamSize} x ₹{event.price} per person
                 </p>
               </div>
             )}
