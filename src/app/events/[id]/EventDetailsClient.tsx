@@ -504,7 +504,7 @@ export default function EventDetailsClient({ event, eventId }: EventDetailsClien
           <Card className="border border-white/30 bg-white/80 backdrop-blur shadow-lg">
             <CardHeader>
               <CardTitle className="text-2xl">
-                {event.isFree ? 'Free' : `$${event.price}`}
+                {event.isFree ? 'Free' : `₹${event.price}`}
               </CardTitle>
               <CardDescription>
                 {event.isFree ? 'No payment required' : 'Per person'}
