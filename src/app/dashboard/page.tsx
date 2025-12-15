@@ -248,6 +248,12 @@ export default function DashboardPage() {
           if (!allowedRoles.length) {
             return null;
           }
+
+          return (
+            <div className="mt-8">
+              <TeamManagementCard allowedRoles={[...new Set(allowedRoles)]} />
+            </div>
+          );
         })()}
 
         <Dialog open={registrationsOpen} onOpenChange={setRegistrationsOpen}>
