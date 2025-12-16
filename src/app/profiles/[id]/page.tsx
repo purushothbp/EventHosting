@@ -110,7 +110,7 @@ export default async function PublicProfilePage({
                 <p className="text-sm uppercase tracking-[0.4em] text-white/70">
                   {profile.department || 'Portfolio'}
                 </p>
-                <h1 className="text-4xl font-bold">{profile.name}</h1>
+                <h1 className="text-xl font-bold">{profile.name}</h1>
                 <p className="text-white/80">{profile.role}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {profile.location && (
