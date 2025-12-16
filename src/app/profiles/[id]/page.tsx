@@ -100,7 +100,7 @@ export default async function PublicProfilePage({
         <section className="rounded-[32px] bg-gradient-to-br from-indigo-600 text-wrap via-purple-600 to-pink-500 p-8 shadow-2xl">
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-4">
-              <Avatar className="h-20 w-20 border-2 border-white/40">
+              <Avatar className="h-10 w-10 border-2 border-white/40">
                 <AvatarImage src={profile.image} alt={profile.name} />
                 <AvatarFallback className="bg-white text-xl font-bold text-indigo-600">
                   {profile.name?.charAt(0)}
