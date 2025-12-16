@@ -103,7 +103,7 @@ const getGoogleCredentials = () => {
   return null;
 };
 
-const providers = [
+const providers: NextAuthOptions['providers'] = [
   CredentialsProvider({
       name: 'Credentials',
       credentials: {
@@ -168,6 +168,10 @@ if (googleCreds) {
       clientSecret: googleCreds.clientSecret,
     })
   );
+}
+
+if (!process.env.NEXTAUTH_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('NEXTAUTH_SECRET is not configured. Set it in your environment variables.');
 }
 
 export const authOptions: NextAuthOptions = {
