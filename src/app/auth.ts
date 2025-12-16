@@ -10,25 +10,96 @@ interface IUserWithPassword extends Omit<IUser, 'password'> {
   password?: string;
 }
 
+type GoogleCredentials = {
+  clientId: string;
+  clientSecret: string;
+};
+
+const normalizeKey = (value?: string | null) => value?.toLowerCase().trim();
+
+const preferredEnvKeys = () => {
+  const keys = [
+    process.env.APP_ENV,
+    process.env.NEXT_PUBLIC_APP_ENV,
+    process.env.VERCEL_ENV,
+    process.env.NODE_ENV,
+    'production',
+    'preview',
+    'development',
+    'default',
+  ]
+    .map(normalizeKey)
+    .filter(Boolean) as string[];
+
+  return Array.from(new Set(keys));
+};
+
+const isCredentialObject = (value: any): value is GoogleCredentials =>
+  Boolean(value && typeof value.clientId === 'string' && typeof value.clientSecret === 'string');
+
+const splitCredentialPair = (value?: string | null): GoogleCredentials | null => {
+  if (!value) return null;
+  const [clientId, clientSecret] = value.split('|').map((segment) => segment?.trim());
+  if (clientId && clientSecret) {
+    return { clientId, clientSecret };
+  }
+  return null;
+};
+
 const getGoogleCredentials = () => {
   const raw = process.env.GOOGLE_OAUTH_CREDENTIALS;
   if (!raw) return null;
+
+  const envKeys = preferredEnvKeys();
+  const lines = raw
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
   try {
     if (raw.trim().startsWith('{')) {
       const parsed = JSON.parse(raw);
-      if (parsed.clientId && parsed.clientSecret) {
+      if (isCredentialObject(parsed)) {
         return parsed;
       }
-    }
-    if (raw.includes('|')) {
-      const [clientId, clientSecret] = raw.split('|').map((value) => value.trim());
-      if (clientId && clientSecret) {
-        return { clientId, clientSecret };
+
+      const candidates = [parsed, parsed.environments].filter(Boolean);
+      for (const candidate of candidates) {
+        if (candidate && typeof candidate === 'object') {
+          for (const key of envKeys) {
+            const match = candidate[key] || candidate[key?.toUpperCase?.() ?? ''];
+            if (isCredentialObject(match)) {
+              return match;
+            }
+          }
+        }
       }
     }
   } catch (error) {
-    console.warn('Failed to parse GOOGLE_OAUTH_CREDENTIALS:', error);
+    console.warn('Failed to parse GOOGLE_OAUTH_CREDENTIALS JSON:', error);
   }
+
+  // Support formats like "production=client|secret" per line
+  for (const line of lines) {
+    const [maybeKey, maybePair] = line.split('=').map((segment) => segment.trim());
+    if (maybePair && envKeys.includes(normalizeKey(maybeKey)!)) {
+      const creds = splitCredentialPair(maybePair);
+      if (creds) return creds;
+    }
+  }
+
+  // Fallback to the first pipe-delimited pair we can find
+  if (lines.length) {
+    for (const line of lines) {
+      const pair = line.includes('=') ? line.split('=').pop() : line;
+      const creds = splitCredentialPair(pair);
+      if (creds) return creds;
+    }
+  }
+
+  const fallback = splitCredentialPair(raw.trim());
+  if (fallback) return fallback;
+
   return null;
 };
 

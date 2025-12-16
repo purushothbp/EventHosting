@@ -64,6 +64,29 @@ GOOGLE_CLIENT_ID=your-client-id-goes-here.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your-client-secret-goes-here
 ```
 
+### 5. Provide Credentials to NextAuth
+
+This project reads Google keys from a single `GOOGLE_OAUTH_CREDENTIALS` variable so that both local development and production deployments can share the same configuration. You can express the value in multiple formats and the backend will automatically pick the right pair based on the current environment (`APP_ENV`, `VERCEL_ENV`, `NODE_ENV`, etc.):
+
+- Simple pipe: `GOOGLE_OAUTH_CREDENTIALS=clientId|clientSecret`
+- JSON:
+
+  ```json
+  {
+    "development": { "clientId": "xxx", "clientSecret": "yyy" },
+    "production": { "clientId": "aaa", "clientSecret": "bbb" }
+  }
+  ```
+
+- Multi-line `key=client|secret` pairs:
+
+  ```
+  GOOGLE_OAUTH_CREDENTIALS=development=devClient|devSecret
+  production=prodClient|prodSecret
+  ```
+
+The app chooses the block that matches the active environment automatically, so you only have to set the variable once on Vercel.
+
 ### Next Steps
 
 With these credentials, you will need to implement a backend service (e.g., using Next.js API routes) that can:
