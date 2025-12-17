@@ -62,6 +62,7 @@ export default function LoginPage() {
           className="w-full flex items-center justify-center gap-2"
           onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
         >
+          {/* //google login enabled */}
           <GoogleIcon />
           Continue with Google
         </Button>
