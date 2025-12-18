@@ -51,21 +51,21 @@ export default function LoginPage() {
         }>
           <LoginForm />
         </Suspense>
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        {/* <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <div className="h-px flex-1 bg-gray-200" />
           <span>or continue with</span>
           <div className="h-px flex-1 bg-gray-200" />
-        </div>
-        <Button
+        </div> */}
+        {/* <Button
           type="button"
           variant="outline"
           className="w-full flex items-center justify-center gap-2"
           onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
-        >
+        > */}
           {/* //google login enabled */}
-          <GoogleIcon />
+          {/* <GoogleIcon />
           Continue with Google
-        </Button>
+        </Button> */}
         <div className="text-sm text-center">
           <a
             href="/register"
