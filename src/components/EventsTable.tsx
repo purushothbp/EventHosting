@@ -152,6 +152,10 @@ export default function EventsTable({ events, loading = false, showActions = fal
 
   // Handle row click
   const onRowClicked = (params: any) => {
+    const target = params?.event?.target as HTMLElement | null;
+    if (target?.closest('button')) {
+      return;
+    }
     router.push(`/events/${params.data._id}`);
   };
 

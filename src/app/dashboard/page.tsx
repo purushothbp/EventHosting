@@ -1,14 +1,14 @@
 // src/app/dashboard/page.tsx
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { PlusCircle, IndianRupee, Loader2, LayoutGrid, Rows } from 'lucide-react';
+import { PlusCircle, Loader2, LayoutGrid, Rows } from 'lucide-react';
 import Link from 'next/link';
 import EventsTable from '@/components/EventsTable';
 import TeamManagementCard from '@/components/TeamManagementCard';
@@ -16,6 +16,8 @@ import EventsGrid from '@/components/EventsGrid';
 import { EventsCarousel } from '@/components/EventsCarousel';
 import { FeaturedEventsHero } from '@/components/FeaturedEventsHero';
 import { categorizeEvents } from '@/lib/event-display';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/components/ui/use-toast';
 
 interface DashboardEvent {
   _id: string;
@@ -49,6 +51,19 @@ interface RegistrationDetail {
     phone?: string;
     year?: number;
   } | null;
+  participants?: RegistrationParticipant[];
+}
+
+interface RegistrationParticipant {
+  name: string;
+  email: string;
+  isPrimary: boolean;
+  attendance?: {
+    status: 'unmarked' | 'pending_confirmation' | 'confirmed' | 'absent';
+    markedAt?: string;
+    confirmedAt?: string;
+    certificateSentAt?: string;
+  } | null;
 }
 
 export default function DashboardPage() {
@@ -60,7 +75,9 @@ export default function DashboardPage() {
   const [registrationsOpen, setRegistrationsOpen] = useState(false);
   const [registrationDetails, setRegistrationDetails] = useState<RegistrationDetail[]>([]);
   const [registrationLoading, setRegistrationLoading] = useState(false);
+  const [attendanceBusy, setAttendanceBusy] = useState<Record<string, boolean>>({});
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const { toast } = useToast();
   const router = useRouter();
   const { sections: eventSections, remaining: remainingEvents } = useMemo(
     () => categorizeEvents(events),
@@ -83,6 +100,7 @@ export default function DashboardPage() {
   const userOrgId = user?.organization || sessionOrgId;
   const resolvedOrgName = (user as any)?.organizationName || sessionOrgName;
   const canManageEvents = ['admin', 'staff', 'coordinator', 'super-admin'].includes(effectiveRole);
+  const isAdminRole = ['admin', 'super-admin'].includes(effectiveRole);
   const shouldRestrictByOrg = Boolean(
     userOrgId &&
     ['admin', 'staff', 'coordinator'].includes(effectiveRole)
@@ -123,12 +141,10 @@ export default function DashboardPage() {
     fetchEvents();
   }, [userOrgId, resolvedOrgName, effectiveRole]);
 
-  const handleViewRegistrations = async (event: { _id: string; title: string; date: string }) => {
-    setSelectedEvent(event);
-    setRegistrationsOpen(true);
+  const loadRegistrations = useCallback(async (eventId: string) => {
     setRegistrationLoading(true);
     try {
-      const response = await fetch(`/api/registrations?eventId=${event._id}&scope=all`);
+      const response = await fetch(`/api/registrations?eventId=${eventId}&scope=all`);
       if (!response.ok) {
         throw new Error('Failed to fetch registrations');
       }
@@ -139,6 +155,46 @@ export default function DashboardPage() {
       setRegistrationDetails([]);
     } finally {
       setRegistrationLoading(false);
+    }
+  }, []);
+
+  const handleViewRegistrations = (event: { _id: string; title: string; date: string }) => {
+    setSelectedEvent(event);
+    setRegistrationsOpen(true);
+    loadRegistrations(event._id);
+  };
+
+  const handleAttendanceAction = async (
+    registrationId: string,
+    participantEmail: string,
+    action: 'mark-present' | 'mark-absent' | 'confirm-attendance'
+  ) => {
+    if (!selectedEvent?._id) return;
+    const key = `${registrationId}:${participantEmail}`;
+    setAttendanceBusy((prev) => ({ ...prev, [key]: true }));
+    try {
+      const response = await fetch(`/api/events/${selectedEvent._id}/attendance`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ registrationId, participantEmail, action }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || 'Failed to update attendance');
+      }
+
+      await loadRegistrations(selectedEvent._id);
+      toast.success('Attendance updated');
+    } catch (error) {
+      console.error('Attendance update failed:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to update attendance');
+    } finally {
+      setAttendanceBusy((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
     }
   };
 
@@ -308,6 +364,117 @@ export default function DashboardPage() {
                           Registered on {new Date(registration.createdAt).toLocaleDateString()}
                         </span>
                       )}
+                    </div>
+                    <div className="mt-4 space-y-3">
+                      {(registration.participants || []).map((participant) => {
+                        const status = participant.attendance?.status ?? 'unmarked';
+                        const participantKey = `${registration._id}:${participant.email}`;
+                        const busy = Boolean(attendanceBusy[participantKey]);
+                        const canMarkPresent =
+                          canManageEvents &&
+                          ['unmarked', 'absent'].includes(status);
+                        const canConfirm =
+                          isAdminRole &&
+                          status === 'pending_confirmation';
+                        const canMarkAbsent =
+                          canManageEvents &&
+                          status !== 'absent';
+
+                        const statusStyles: Record<string, string> = {
+                          confirmed: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+                          pending_confirmation: 'bg-amber-100 text-amber-700 border-amber-200',
+                          absent: 'bg-rose-100 text-rose-700 border-rose-200',
+                          unmarked: 'bg-slate-100 text-slate-700 border-slate-200',
+                        };
+
+                        const statusLabels: Record<string, string> = {
+                          confirmed: 'Confirmed',
+                          pending_confirmation: 'Pending confirmation',
+                          absent: 'Marked absent',
+                          unmarked: 'Not marked',
+                        };
+
+                        return (
+                          <div
+                            key={participant.email}
+                            className="rounded-md border border-white/30 bg-white/60 p-3"
+                          >
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <p className="font-medium">{participant.name}</p>
+                                  {participant.isPrimary && (
+                                    <Badge variant="outline" className="border-indigo-200 text-indigo-600">
+                                      Team Lead
+                                    </Badge>
+                                  )}
+                                </div>
+                                <p className="text-xs text-muted-foreground break-all">{participant.email}</p>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <Badge
+                                  variant="secondary"
+                                  className={statusStyles[status] || 'bg-slate-100 text-slate-700'}
+                                >
+                                  {statusLabels[status] || 'Not marked'}
+                                </Badge>
+                                {participant.attendance?.certificateSentAt && (
+                                  <Badge className="bg-green-50 text-green-700 border border-green-200">
+                                    Certificate sent
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            {canManageEvents && (
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                {canMarkPresent && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    disabled={busy}
+                                    onClick={() =>
+                                      handleAttendanceAction(registration._id, participant.email, 'mark-present')
+                                    }
+                                  >
+                                    {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                    Mark Present
+                                  </Button>
+                                )}
+                                {canConfirm && (
+                                  <Button
+                                    size="sm"
+                                    disabled={busy}
+                                    onClick={() =>
+                                      handleAttendanceAction(
+                                        registration._id,
+                                        participant.email,
+                                        'confirm-attendance'
+                                      )
+                                    }
+                                  >
+                                    {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                    Confirm & Send Certificate
+                                  </Button>
+                                )}
+                                {canMarkAbsent && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="text-rose-600 hover:text-rose-700"
+                                    disabled={busy}
+                                    onClick={() =>
+                                      handleAttendanceAction(registration._id, participant.email, 'mark-absent')
+                                    }
+                                  >
+                                    {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                    Mark Absent
+                                  </Button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}

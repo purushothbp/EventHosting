@@ -142,11 +142,17 @@ export async function POST(request: Request) {
         name: session.user.name || 'Primary Participant',
         email: primaryParticipantEmail || `${session.user.id}@placeholder.local`,
         isPrimary: true,
+        attendance: {
+          status: 'unmarked',
+        },
       },
       ...additionalParticipants.map((participant) => ({
         name: participant.name!,
         email: participant.email!,
         isPrimary: false,
+        attendance: {
+          status: 'unmarked',
+        },
       })),
     ];
 
@@ -275,6 +281,15 @@ export async function GET(request: Request) {
           name: participant.name,
           email: participant.email,
           isPrimary: participant.isPrimary,
+          attendance: participant.attendance ? {
+            status: participant.attendance.status,
+            markedBy: participant.attendance.markedBy?.toString(),
+            markedAt: participant.attendance.markedAt?.toISOString(),
+            confirmedBy: participant.attendance.confirmedBy?.toString(),
+            confirmedAt: participant.attendance.confirmedAt?.toISOString(),
+            confirmationNotes: participant.attendance.confirmationNotes,
+            certificateSentAt: participant.attendance.certificateSentAt?.toISOString(),
+          } : null,
         })),
       }));
 

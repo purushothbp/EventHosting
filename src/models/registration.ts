@@ -1,9 +1,23 @@
 import { Schema, models, model, Document, Types } from 'mongoose';
 
+export type AttendanceStatus = 'unmarked' | 'pending_confirmation' | 'confirmed' | 'absent';
+
+export interface IParticipantAttendance {
+  status: AttendanceStatus;
+  markedBy?: Types.ObjectId;
+  markedAt?: Date;
+  confirmedBy?: Types.ObjectId;
+  confirmedAt?: Date;
+  confirmationNotes?: string;
+  certificateSentAt?: Date;
+}
+
 export interface IRegistrationParticipant {
+  _id?: Types.ObjectId;
   name: string;
   email: string;
   isPrimary: boolean;
+  attendance?: IParticipantAttendance;
 }
 
 export interface IRegistration extends Document {
@@ -31,6 +45,19 @@ const RegistrationSchema = new Schema<IRegistration>({
       name: { type: String, required: true, trim: true },
       email: { type: String, required: true, trim: true, lowercase: true },
       isPrimary: { type: Boolean, default: false },
+      attendance: {
+        status: {
+          type: String,
+          enum: ['unmarked', 'pending_confirmation', 'confirmed', 'absent'],
+          default: 'unmarked'
+        },
+        markedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+        markedAt: { type: Date },
+        confirmedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+        confirmedAt: { type: Date },
+        confirmationNotes: { type: String, trim: true },
+        certificateSentAt: { type: Date },
+      }
     },
   ],
 }, { timestamps: true });

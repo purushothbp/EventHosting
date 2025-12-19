@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { generateCertificatePdf } from '@/lib/certificates';
 
 const transporter = nodemailer.createTransport({
   host: process.env.NEXT_SMTP_HOST,
@@ -135,4 +136,55 @@ export async function sendOrgInvitationEmail({
   } catch (error) {
     console.error('Error sending organization invitation email:', error);
   }
+}
+
+interface CertificateEmailPayload {
+  participantName: string;
+  participantEmail: string;
+  eventTitle: string;
+  eventDate?: Date;
+  organizationName?: string;
+  location?: string;
+}
+
+const sanitizeFilename = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
+
+export async function sendCertificateEmail(payload: CertificateEmailPayload) {
+  const pdfBuffer = await generateCertificatePdf({
+    participantName: payload.participantName,
+    eventTitle: payload.eventTitle,
+    eventDate: payload.eventDate,
+    organizationName: payload.organizationName,
+    location: payload.location,
+  });
+
+  const filename = `${sanitizeFilename(payload.participantName || 'participant')}-${sanitizeFilename(payload.eventTitle || 'certificate')}.pdf`;
+
+  await transporter.sendMail({
+    from: `"${process.env.NEXT_EMAIL_FROM}" <${process.env.NEXT_SMTP_USER}>`,
+    to: payload.participantEmail,
+    subject: `Certificate of Participation - ${payload.eventTitle}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; padding: 24px; border-radius: 12px; border: 1px solid #e5e7eb; background: #ffffff;">
+        <h2 style="color: #111827;">Congratulations, ${payload.participantName}!</h2>
+        <p style="color: #4b5563;">
+          Thank you for being part of <strong>${payload.eventTitle}</strong>. Your certificate of participation is attached to this email.
+        </p>
+        <p style="color: #4b5563;">
+          Keep up the great work!
+        </p>
+      </div>
+    `,
+    attachments: [
+      {
+        filename,
+        content: pdfBuffer,
+        contentType: 'application/pdf',
+      },
+    ],
+  });
 }
