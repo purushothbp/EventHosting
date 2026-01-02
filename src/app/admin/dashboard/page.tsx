@@ -37,7 +37,8 @@ export default function AdminDashboard() {
             </div>
         );
     }
-    if ((session?.user as any)?.role !== 'super-admin') {
+    const role = (session?.user as any)?.role;
+    if (!['super-admin', 'admin'].includes(role)) {
         redirect('/dashboard');
     }
 

@@ -3,8 +3,9 @@ import { getServerSession } from 'next-auth';
 import { Types } from 'mongoose';
 import { authOptions } from '@/app/auth';
 import { connectToDatabase } from '@/app/lib/mongo';
-import { Event, Registration } from '@/models';
+import { Event, Registration, Certificate } from '@/models';
 import { sendCertificateEmail } from '@/lib/email';
+import crypto from 'crypto';
 
 export const runtime = 'nodejs';
 
@@ -60,7 +61,7 @@ export async function PATCH(request: Request, context: AttendanceContext) {
     await connectToDatabase();
 
     const event = await Event.findById(eventId)
-      .populate('organization', 'name')
+      .populate('organization', 'name logoUrl')
       .select('organization organizer title date location')
       .lean<any>();
 
@@ -174,15 +175,60 @@ export async function PATCH(request: Request, context: AttendanceContext) {
       !participant.attendance?.certificateSentAt
     ) {
       try {
+        const certificateId = crypto.randomBytes(8).toString('hex');
+        const verificationUrl = `${process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_SITE_URL || ''}/certs/${certificateId}`;
+
+        const organizerName =
+          (event.organizer as any)?.name ||
+          (event.organizer as any)?.title ||
+          undefined;
+        const coordinatorName = session.user?.name || undefined;
+        const organizationName = event.organization?.name || 'Grook';
+
+        let organizationLogoDataUrl: string | undefined;
+        const logoUrl = (event.organization as any)?.logoUrl;
+        if (logoUrl) {
+          try {
+            const res = await fetch(logoUrl);
+            if (res.ok) {
+              const buffer = Buffer.from(await res.arrayBuffer());
+              const mime = res.headers.get('content-type') || 'image/png';
+              organizationLogoDataUrl = `data:${mime};base64,${buffer.toString('base64')}`;
+            }
+          } catch (error) {
+            console.warn('Failed to load org logo for certificate', error);
+          }
+        }
+
+        await Certificate.create({
+          certificateId,
+          participantName: participant.name,
+          participantEmail: participant.email,
+          eventId: event._id,
+          eventTitle: event.title,
+          eventDate: event.date,
+          organizationId: event.organization?._id || event.organization,
+          organizationName,
+          issuedBy: actorId,
+          verificationUrl,
+          status: 'valid',
+        });
+
         await sendCertificateEmail({
           participantName: participant.name,
           participantEmail: participant.email,
           eventTitle: event.title,
           eventDate: event.date,
-          organizationName: event.organization?.name || 'Grook',
+          organizationName,
           location: event.location,
+          certificateId,
+          verificationUrl,
+          organizerName,
+          coordinatorName,
+          organizationLogoDataUrl,
         });
         participant.attendance.certificateSentAt = new Date();
+        participant.attendance.certificateId = certificateId;
         registration.markModified('participants');
         await registration.save();
       } catch (error) {

@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, Users, Settings, Plus, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
 
 type Organization = {
   _id: string;
@@ -48,6 +49,8 @@ export default function OrganizationPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const { toast } = useToast();
+  const [inviteForm, setInviteForm] = useState({ name: '', email: '', role: 'staff' });
+  const [inviteLoading, setInviteLoading] = useState(false);
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -89,6 +92,40 @@ export default function OrganizationPage() {
     organization.coordinators.some(c => c._id === session?.user?.id) ? 'coordinator' :
     organization.members.some(m => m._id === session?.user?.id) ? 'member' : null
   ) : null;
+
+  const handleInvite = async () => {
+    if (!organization?._id) return;
+    setInviteLoading(true);
+    try {
+      const res = await fetch(`/api/organizations/${organization._id}/members`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(inviteForm),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to invite member');
+      }
+      toast({
+        title: 'Success',
+        description: 'Member added and invitation sent',
+      });
+      setInviteForm({ name: '', email: '', role: 'staff' });
+      // Refresh org data
+      const orgRes = await fetch(`/api/organizations/${organization._id}`);
+      if (orgRes.ok) {
+        setOrganization(await orgRes.json());
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to invite member',
+        variant: 'destructive',
+      });
+    } finally {
+      setInviteLoading(false);
+    }
+  };
 
   if (loading || status === 'loading') {
     return (
@@ -400,11 +437,37 @@ export default function OrganizationPage() {
                   </div>
 
                   {userRole === 'admin' && (
-                    <div className="mt-6 pt-6 border-t border-gray-200">
-                      <Button>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Invite Members
-                      </Button>
+                    <div className="mt-6 pt-6 border-t border-gray-200 space-y-3">
+                      <p className="text-sm font-medium text-gray-700">Invite member</p>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <Input
+                          placeholder="Full name"
+                          value={inviteForm.name}
+                          onChange={(e) => setInviteForm((p) => ({ ...p, name: e.target.value }))}
+                        />
+                        <Input
+                          placeholder="Email"
+                          value={inviteForm.email}
+                          onChange={(e) => setInviteForm((p) => ({ ...p, email: e.target.value }))}
+                        />
+                        <div className="sm:col-span-2 flex flex-wrap items-center gap-3">
+                          <select
+                            className="h-10 rounded-md border px-3 text-sm"
+                            value={inviteForm.role}
+                            onChange={(e) => setInviteForm((p) => ({ ...p, role: e.target.value }))}
+                          >
+                            <option value="staff">Staff</option>
+                            <option value="coordinator">Coordinator</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                          <Button
+                            onClick={handleInvite}
+                            disabled={inviteLoading || !inviteForm.name || !inviteForm.email}
+                          >
+                            {inviteLoading ? 'Sending...' : 'Add Member'}
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </CardContent>

@@ -13,8 +13,11 @@ import { useStore } from '@/store/states';
 import { EventsCarousel } from '@/components/EventsCarousel';
 import { EventCard } from '@/components/event-card';
 import { categorizeEvents } from '@/lib/event-display';
+import { useSearchParams, useRouter } from 'next/navigation';
 
-export default function HomeClient({ initialEvents }: { initialEvents: any[] }) {
+type Props = { initialEvents: any[]; initialScope?: string };
+
+export default function HomeClient({ initialEvents, initialScope = 'upcoming' }: Props) {
     const [allEvents] = useState(initialEvents); // keep original
     const { events, setEvents } = useStore();
 
@@ -23,9 +26,27 @@ export default function HomeClient({ initialEvents }: { initialEvents: any[] }) 
     const [eventType, setEventType] = useState('all');
     const [isFree, setIsFree] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const [scope, setScope] = useState(initialScope);
+
+    useEffect(() => {
+        const incomingScope = searchParams.get('scope');
+        if (incomingScope && incomingScope !== scope) {
+          setScope(incomingScope);
+        }
+    }, [searchParams, scope]);
 
     useEffect(() => {
         let filteredEvents = allEvents;
+
+        if (scope === 'upcoming') {
+            const now = new Date();
+            filteredEvents = filteredEvents.filter((e) => new Date(e.date) >= now && !e.completed);
+        } else if (scope === 'past') {
+            const now = new Date();
+            filteredEvents = filteredEvents.filter((e) => new Date(e.date) < now || e.completed);
+        }
 
         if (organization !== 'all') {
             filteredEvents = filteredEvents.filter((e) => e.organization === organization);
@@ -46,7 +67,8 @@ export default function HomeClient({ initialEvents }: { initialEvents: any[] }) 
         }
 
         setEvents(filteredEvents);
-    }, [organization, department, eventType, isFree, searchTerm, allEvents, setEvents]);
+        setEvents(filteredEvents);
+    }, [organization, department, eventType, isFree, searchTerm, allEvents, setEvents, scope]);
 
     const uniqueOrganizations = ['all', ...new Set(
         allEvents
@@ -74,7 +96,7 @@ export default function HomeClient({ initialEvents }: { initialEvents: any[] }) 
             </header>
 
             <div className="mb-6 sm:mb-8 p-4 rounded-xl border border-white/30 bg-white/80 shadow-lg backdrop-blur">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-start">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 items-start">
                     <div className="relative sm:col-span-2 lg:col-span-2">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                         <Input
@@ -84,6 +106,21 @@ export default function HomeClient({ initialEvents }: { initialEvents: any[] }) 
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
+                    <Select value={scope} onValueChange={(value) => {
+                        setScope(value);
+                        const params = new URLSearchParams(Array.from(searchParams.entries()));
+                        params.set('scope', value);
+                        router.replace(`/events?${params.toString()}`);
+                    }}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Timeframe" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="upcoming">Upcoming</SelectItem>
+                            <SelectItem value="past">Past</SelectItem>
+                            <SelectItem value="all">All</SelectItem>
+                        </SelectContent>
+                    </Select>
                     <Select value={organization} onValueChange={setOrganization}>
                         <SelectTrigger>
                             <SelectValue placeholder="Filter by Organization" />

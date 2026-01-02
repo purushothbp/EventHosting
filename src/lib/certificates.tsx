@@ -1,4 +1,5 @@
 import { jsPDF } from 'jspdf';
+import QRCode from 'qrcode';
 import { format } from 'date-fns';
 
 type CertificatePayload = {
@@ -6,65 +7,114 @@ type CertificatePayload = {
   eventTitle: string;
   eventDate?: Date | string | null;
   organizationName?: string;
+  organizationLogoDataUrl?: string;
   location?: string;
+  certificateId?: string;
+  verificationUrl?: string;
+  coordinatorName?: string;
+  organizerName?: string;
 };
 
+const normalizeText = (text: string) =>
+  text
+    .normalize('NFKD')
+    .replace(/^\d+[.)\s-]*/, '')
+    .replace(/[^\x00-\x7F]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
 export async function generateCertificatePdf(payload: CertificatePayload) {
-  const doc = new jsPDF({
-    orientation: 'landscape',
-    unit: 'pt',
-    format: 'a4',
-  });
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+  const W = doc.internal.pageSize.getWidth();
+  const H = doc.internal.pageSize.getHeight();
 
-  const width = doc.internal.pageSize.getWidth();
-  const height = doc.internal.pageSize.getHeight();
+  /* ===== GRAND BACKGROUND ===== */
+  doc.setFillColor(253, 252, 249);
+  doc.rect(0, 0, W, H, 'F');
 
-  // Background
-  doc.setFillColor('#fdf8ee');
-  doc.rect(0, 0, width, height, 'F');
+  doc.setDrawColor(212, 175, 55);
+  doc.setLineWidth(6);
+  doc.rect(20, 20, W - 40, H - 40);
 
-  doc.setDrawColor('#c084fc');
-  doc.setLineWidth(4);
-  doc.rect(24, 24, width - 48, height - 48);
+  doc.setDrawColor(125, 94, 19);
+  doc.setLineWidth(1.5);
+  doc.rect(32, 32, W - 64, H - 64);
 
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(28);
-  doc.setTextColor('#27272a');
-  doc.text(payload.organizationName ?? 'Grook', width / 2, 90, { align: 'center' });
+  /* ===== LOGO ===== */
+  if (payload.organizationLogoDataUrl) {
+    doc.addImage(payload.organizationLogoDataUrl, 'PNG', 60, 60, 90, 80);
+  }
 
-  doc.setFontSize(40);
-  doc.setTextColor('#7c3aed');
-  doc.text('Certificate of Participation', width / 2, 140, { align: 'center' });
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(16);
-  doc.setTextColor('#1c1917');
-  doc.text('This is to certify that', width / 2, 200, { align: 'center' });
-
-  doc.setFont('helvetica', 'bold');
+  /* ===== HEADER ===== */
+  doc.setFont('times', 'bold');
   doc.setFontSize(30);
-  doc.text(payload.participantName, width / 2, 240, { align: 'center' });
+  doc.setTextColor(88, 28, 135);
+  doc.text((payload.organizationName ?? '').toUpperCase(), W / 2, 110, { align: 'center' });
 
-  const formattedDate = payload.eventDate
-    ? format(new Date(payload.eventDate), 'MMMM dd, yyyy')
-    : null;
+  if (payload.certificateId) {
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Certificate ID: ${payload.certificateId}`, W - 70, 60, { align: 'right' });
+  }
 
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(16);
-  doc.setTextColor('#44403c');
-  const lines = [
-    `has successfully participated in ${payload.eventTitle}${formattedDate ? ` held on ${formattedDate}` : ''}.`,
-    payload.location ? `Venue: ${payload.location}` : '',
-    'We appreciate your enthusiastic participation and wish you continued success.',
-  ].filter(Boolean);
+  /* ===== TITLE ===== */
+  doc.setFontSize(42);
+  doc.setTextColor(0, 0, 0);
+  doc.text('CERTIFICATE OF PARTICIPATION', W / 2, 185, { align: 'center' });
 
-  doc.text(lines, width / 2, 280, { align: 'center' });
+  /* ===== BODY ===== */
+  doc.setFontSize(18);
+  doc.text('This is proudly presented to', W / 2, 245, { align: 'center' });
 
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
-  doc.text('Event Coordinator', width * 0.3, height - 80, { align: 'center' });
-  doc.text('Organizer', width * 0.7, height - 80, { align: 'center' });
+  doc.setFont('courier', 'bolditalic');
+  doc.setFontSize(38);
+  doc.text(payload.participantName.toUpperCase(), W / 2, 295, { align: 'center' });
 
-  const buffer = doc.output('arraybuffer');
-  return Buffer.from(buffer);
+  const title = normalizeText(payload.eventTitle);
+  const location = payload.location ? normalizeText(payload.location) : '';
+  const date = payload.eventDate ? format(new Date(payload.eventDate), 'MMMM dd, yyyy') : '';
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(18);
+  doc.text('for outstanding participation in the event titled', W / 2, 345, { align: 'center' });
+
+  doc.setFont('times', 'bolditalic');
+  doc.setFontSize(20);
+  doc.setTextColor(125, 94, 19);
+  doc.text(title, W / 2, 375, { align: 'center', maxWidth: 720 });
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(18);
+  doc.setTextColor(0, 0, 0);
+  doc.text(`held on ${date} at ${location}`, W / 2, 410, { align: 'center' });
+
+  /* ===== SIGNATURES ===== */
+  doc.setFontSize(13);
+
+  doc.text(payload.coordinatorName ?? '', 280, H - 120, { align: 'center' });
+  doc.line(180, H - 115, 380, H - 115);
+  doc.text('Event Coordinator', 280, H - 100, { align: 'center' });
+
+  doc.text(payload.organizerName ?? '', W - 280, H - 120, { align: 'center' });
+  doc.line(W - 380, H - 115, W - 180, H - 115);
+  doc.text('Head of Department', W - 280, H - 100, { align: 'center' });
+
+  /* ===== GOLD SEAL ===== */
+  doc.setDrawColor(212, 175, 55);
+  doc.setLineWidth(3);
+  doc.setFontSize(9);
+  doc.circle(W / 2, H - 135, 32);
+  doc.text('OFFICIAL', W / 2, H - 142, { align: 'center' });
+  doc.text('SEAL', W / 2, H - 125, { align: 'center' });
+
+  /* ===== QR CODE ===== */
+  if (payload.verificationUrl) {
+    const qr = await QRCode.toDataURL(payload.verificationUrl, { width: 120 });
+    doc.addImage(qr, 'PNG', W - 150, H - 190, 90, 90);
+    doc.setFontSize(9);
+    doc.text('Verify Certificate', W - 105, H - 90, { align: 'center' });
+  }
+
+  const output = doc.output('arraybuffer');
+  return Buffer.from(new Uint8Array(output as ArrayBuffer));
 }

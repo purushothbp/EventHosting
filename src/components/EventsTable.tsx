@@ -34,9 +34,10 @@ interface EventsTableProps {
   loading?: boolean;
   showActions?: boolean;
   onViewRegistrations?: (event: Event) => void | Promise<void>;
+  onPreviewEvent?: (event: Event) => void;
 }
 
-export default function EventsTable({ events, loading = false, showActions = false, onViewRegistrations }: EventsTableProps) {
+export default function EventsTable({ events, loading = false, showActions = false, onViewRegistrations, onPreviewEvent }: EventsTableProps) {
   const router = useRouter();
   
   const colDefs = useMemo<Array<import('ag-grid-community').ColDef<Event>>>(() => {
@@ -154,6 +155,10 @@ export default function EventsTable({ events, loading = false, showActions = fal
   const onRowClicked = (params: any) => {
     const target = params?.event?.target as HTMLElement | null;
     if (target?.closest('button')) {
+      return;
+    }
+    if (onPreviewEvent) {
+      onPreviewEvent(params.data);
       return;
     }
     router.push(`/events/${params.data._id}`);

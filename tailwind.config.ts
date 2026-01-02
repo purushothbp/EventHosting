@@ -19,6 +19,7 @@ export default {
       fontFamily: {
         body: ['"PT Sans"', 'sans-serif'],
         headline: ['"Poppins"', 'sans-serif'],
+        courier: ['"Courier New"', 'Courier', 'monospace'],
         code: ['monospace'],
       },
       colors: {

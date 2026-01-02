@@ -10,6 +10,7 @@ export interface IParticipantAttendance {
   confirmedAt?: Date;
   confirmationNotes?: string;
   certificateSentAt?: Date;
+  certificateId?: string;
 }
 
 export interface IRegistrationParticipant {

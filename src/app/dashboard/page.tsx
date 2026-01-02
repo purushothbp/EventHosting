@@ -18,6 +18,7 @@ import { FeaturedEventsHero } from '@/components/FeaturedEventsHero';
 import { categorizeEvents } from '@/lib/event-display';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
+import { useRef } from 'react';
 
 interface DashboardEvent {
   _id: string;
@@ -77,7 +78,10 @@ export default function DashboardPage() {
   const [registrationLoading, setRegistrationLoading] = useState(false);
   const [attendanceBusy, setAttendanceBusy] = useState<Record<string, boolean>>({});
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [forceTable, setForceTable] = useState(false);
+  const [inlineEvent, setInlineEvent] = useState<DashboardEvent | null>(null);
   const { toast } = useToast();
+  const eventsSectionRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
   const { sections: eventSections, remaining: remainingEvents } = useMemo(
     () => categorizeEvents(events),
@@ -86,7 +90,10 @@ export default function DashboardPage() {
   const heroEvents = useMemo(
     () =>
       events
-        .filter((event) => Boolean(event.imageUrl))
+        .filter((event) => {
+          const now = new Date();
+          return Boolean(event.imageUrl) && new Date(event.date) >= now && !event.completed;
+        })
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
         .slice(0, 5),
     [events]
@@ -101,6 +108,7 @@ export default function DashboardPage() {
   const resolvedOrgName = (user as any)?.organizationName || sessionOrgName;
   const canManageEvents = ['admin', 'staff', 'coordinator', 'super-admin'].includes(effectiveRole);
   const isAdminRole = ['admin', 'super-admin'].includes(effectiveRole);
+  const isOrgOverviewRole = ['admin', 'staff', 'coordinator', 'super-admin'].includes(effectiveRole);
   const shouldRestrictByOrg = Boolean(
     userOrgId &&
     ['admin', 'staff', 'coordinator'].includes(effectiveRole)
@@ -139,7 +147,7 @@ export default function DashboardPage() {
     };
 
     fetchEvents();
-  }, [userOrgId, resolvedOrgName, effectiveRole]);
+  }, [userOrgId, resolvedOrgName, effectiveRole, shouldRestrictByOrg]);
 
   const loadRegistrations = useCallback(async (eventId: string) => {
     setRegistrationLoading(true);
@@ -162,6 +170,10 @@ export default function DashboardPage() {
     setSelectedEvent(event);
     setRegistrationsOpen(true);
     loadRegistrations(event._id);
+  };
+
+  const handlePreviewEvent = (event: DashboardEvent) => {
+    setInlineEvent(event);
   };
 
   const handleAttendanceAction = async (
@@ -206,6 +218,12 @@ export default function DashboardPage() {
     </div>;
   }
 
+  const now = new Date();
+  const totalEvents = events.length;
+  const upcomingEvents = events.filter((event) => new Date(event.date) >= now).length;
+  const pastEvents = events.filter((event) => new Date(event.date) < now).length;
+  const totalRegistrations = events.reduce((sum, evt) => sum + (evt.registrationCount || 0), 0);
+
   return (
     <div className="space-y-8">
       {showHero && <FeaturedEventsHero events={heroEvents} />}
@@ -215,41 +233,95 @@ export default function DashboardPage() {
           <div className="flex flex-col gap-1">
             <h1 className="text-3xl font-bold">Dashboard</h1>
             <p className="text-sm text-muted-foreground">
-              Switch between grid and table layouts to manage your events.
+              Your centralized view of events, participation, and certificates.
             </p>
           </div>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="gap-2 border border-white/30 bg-white/70 shadow-sm"
-              onClick={() => setViewMode((prev) => (prev === 'grid' ? 'table' : 'grid'))}
-            >
-              {viewMode === 'grid' ? (
-                <>
-                  <Rows className="h-4 w-4" /> List View
-                </>
-              ) : (
-                <>
-                  <LayoutGrid className="h-4 w-4" /> Grid View
-                </>
+          {!isOrgOverviewRole && (
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="gap-2 border border-white/30 bg-white/70 shadow-sm"
+                onClick={() => setViewMode((prev) => (prev === 'grid' ? 'table' : 'grid'))}
+              >
+                {viewMode === 'grid' ? (
+                  <>
+                    <Rows className="h-4 w-4" /> List View
+                  </>
+                ) : (
+                  <>
+                    <LayoutGrid className="h-4 w-4" /> Grid View
+                  </>
+                )}
+              </Button>
+              {canManageEvents && (
+                <Link href="/events/new">
+                  <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Create Event
+                  </Button>
+                </Link>
               )}
-            </Button>
-            {canManageEvents && (
-              <Link href="/events/new">
-                <Button>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Create Event
-                </Button>
-              </Link>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
-        <Card className="border border-white/30 bg-white/80 shadow-xl backdrop-blur">
+        {isOrgOverviewRole && (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <button
+              onClick={() => router.push('/events?scope=all')}
+              className="text-left"
+            >
+              <Card className="h-full border border-white/30 bg-white/80 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:shadow-md">
+                <CardContent className="p-4">
+                  <p className="text-xs text-muted-foreground">Total events</p>
+                  <p className="mt-2 text-2xl font-semibold">{totalEvents}</p>
+                </CardContent>
+              </Card>
+            </button>
+            <button
+              onClick={() => router.push('/events?scope=upcoming')}
+              className="text-left"
+            >
+              <Card className="h-full border border-white/30 bg-white/80 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:shadow-md">
+                <CardContent className="p-4">
+                  <p className="text-xs text-muted-foreground">Upcoming</p>
+                  <p className="mt-2 text-2xl font-semibold">{upcomingEvents}</p>
+                </CardContent>
+              </Card>
+            </button>
+            <button
+              onClick={() => router.push('/events?scope=past')}
+              className="text-left"
+            >
+              <Card className="h-full border border-white/30 bg-white/80 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:shadow-md">
+                <CardContent className="p-4">
+                  <p className="text-xs text-muted-foreground">Completed</p>
+                  <p className="mt-2 text-2xl font-semibold">{pastEvents}</p>
+                </CardContent>
+              </Card>
+            </button>
+            <button
+              onClick={() => {
+                setViewMode('table');
+                eventsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              className="text-left"
+            >
+              <Card className="h-full border border-white/30 bg-white/80 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:shadow-md">
+                <CardContent className="p-4">
+                  <p className="text-xs text-muted-foreground">Registrations</p>
+                  <p className="mt-2 text-2xl font-semibold">{totalRegistrations}</p>
+                </CardContent>
+              </Card>
+            </button>
+          </div>
+        )}
+
+        <Card ref={eventsSectionRef} className="border border-white/30 bg-white/80 shadow-xl backdrop-blur">
           <CardContent className="p-6">
-          {viewMode === 'grid' ? (
+          {(viewMode === 'grid' && !forceTable) ? (
             <div className="space-y-10">
               {eventSections.some((section) => section.events.length) && (
                 <div className="space-y-8">
@@ -284,6 +356,7 @@ export default function DashboardPage() {
               loading={loading}
               onViewRegistrations={canManageEvents ? handleViewRegistrations : undefined}
               showActions={canManageEvents}
+              onPreviewEvent={handlePreviewEvent}
             />
           )}
           </CardContent>
@@ -483,6 +556,49 @@ export default function DashboardPage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Inline event preview modal */}
+      {inlineEvent && (
+        <Dialog open={true} onOpenChange={() => setInlineEvent(null)}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>{inlineEvent.title}</DialogTitle>
+              <DialogDescription>
+                {inlineEvent.date ? new Date(inlineEvent.date).toLocaleString() : ''} • {inlineEvent.location}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">{inlineEvent.description}</p>
+              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                <Badge variant="secondary">{inlineEvent.type}</Badge>
+                {inlineEvent.organization?.name && (
+                  <Badge variant="outline">{inlineEvent.organization.name}</Badge>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={() => {
+                  setInlineEvent(null);
+                  router.push(`/events/${inlineEvent._id}`);
+                }}>
+                  View event page
+                </Button>
+                {canManageEvents && (
+                  <Button variant="outline" onClick={() => {
+                    setInlineEvent(null);
+                    handleViewRegistrations({
+                      _id: inlineEvent._id,
+                      title: inlineEvent.title,
+                      date: inlineEvent.date,
+                    });
+                  }}>
+                    View registrations
+                  </Button>
+                )}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

@@ -145,6 +145,11 @@ interface CertificateEmailPayload {
   eventDate?: Date;
   organizationName?: string;
   location?: string;
+  certificateId?: string;
+  verificationUrl?: string;
+  organizerName?: string;
+  coordinatorName?: string;
+  organizationLogoDataUrl?: string;
 }
 
 const sanitizeFilename = (value: string) =>
@@ -160,6 +165,11 @@ export async function sendCertificateEmail(payload: CertificateEmailPayload) {
     eventDate: payload.eventDate,
     organizationName: payload.organizationName,
     location: payload.location,
+    certificateId: payload.certificateId,
+    verificationUrl: payload.verificationUrl,
+    organizationLogoDataUrl: payload.organizationLogoDataUrl,
+    organizerName: payload.organizerName,
+    coordinatorName: payload.coordinatorName,
   });
 
   const filename = `${sanitizeFilename(payload.participantName || 'participant')}-${sanitizeFilename(payload.eventTitle || 'certificate')}.pdf`;
@@ -174,6 +184,9 @@ export async function sendCertificateEmail(payload: CertificateEmailPayload) {
         <p style="color: #4b5563;">
           Thank you for being part of <strong>${payload.eventTitle}</strong>. Your certificate of participation is attached to this email.
         </p>
+        ${payload.certificateId ? `<p style="color: #4b5563;">Certificate ID: <strong>${payload.certificateId}</strong></p>` : ''}
+        ${payload.verificationUrl ? `<p style="color: #4b5563;">Verify anytime: <a href="${payload.verificationUrl}" target="_blank" rel="noreferrer">${payload.verificationUrl}</a></p>` : ''}
+        ${payload.organizerName || payload.coordinatorName ? `<p style="color: #4b5563;">Signed by: <strong>${[payload.organizerName, payload.coordinatorName].filter(Boolean).join(' & ')}</strong></p>` : ''}
         <p style="color: #4b5563;">
           Keep up the great work!
         </p>

@@ -4,25 +4,47 @@ import { connectToDatabase } from "@/app/lib/mongo";
 import Event, { IEvent } from "@/models/event";
 import "@/models/Organization";
 import "@/models/user";
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/auth';
+type PageProps = {
+  searchParams?: { [key: string]: string | string[] | undefined };
+};
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default async function HomePage() {
+export default async function HomePage({ searchParams = {} }: PageProps) {
   await connectToDatabase();
   const now = new Date();
 
-  // Populate organization and organizer references
-  const events = await Event.find({
-      completed: { $ne: true },
-      date: { $gte: now }
-    })
+  const scopeRaw = Array.isArray(searchParams.scope) ? searchParams.scope[0] : searchParams.scope;
+  const scope = (scopeRaw || 'upcoming').toLowerCase();
+
+  const session = await getServerSession(authOptions);
+  const sessionRole = (session?.user as any)?.role?.toLowerCase?.();
+  const sessionOrgId = (session?.user as any)?.organization;
+  const orgScoped = sessionOrgId && ['admin', 'staff', 'coordinator'].includes(sessionRole || '');
+
+  const filter: Record<string, any> = {};
+  if (orgScoped) {
+    filter.organization = sessionOrgId;
+  }
+  if (scope === 'past') {
+    filter.date = { $lt: now };
+  } else if (scope === 'all') {
+    // no date filter
+  } else {
+    // upcoming default
+    filter.date = { $gte: now };
+    filter.completed = { $ne: true };
+  }
+
+  const events = await Event.find(filter)
     .populate('organization', 'name')
     .populate('organizer', 'name')
-    .sort({ date: 1 })
+    .sort(scope === 'past' ? { date: -1 } : { date: 1 })
     .lean<IEvent[]>();
 
-  // Convert all MongoDB objects to plain serializable objects
   const serialized = events.map(e => {
     const event = e as any;
     return {
@@ -46,5 +68,5 @@ export default async function HomePage() {
     };
   });
 
-  return <HomeClient initialEvents={serialized} />;
+  return <HomeClient initialEvents={serialized} initialScope={scope} />;
 }
