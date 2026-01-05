@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/app/lib/mongo';
 import { Certificate } from '@/models';
+import type { ICertificate } from '@/models/certificate';
 
 type Context = {
   params: Promise<{ id: string }>;
@@ -14,7 +15,9 @@ export async function GET(_req: Request, context: Context) {
     }
 
     await connectToDatabase();
-    const cert = await Certificate.findOne({ certificateId: id }).lean();
+    const cert = await Certificate.findOne({ certificateId: id })
+      .lean<ICertificate>()
+      .exec();
     if (!cert) {
       return NextResponse.json({ valid: false }, { status: 404 });
     }

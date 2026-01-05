@@ -384,11 +384,14 @@ export default function NewEventPage() {
               id="isFree"
               name="isFree"
               checked={formData.isFree}
-              onCheckedChange={(checked) => 
-                setFormData(prev => ({ ...prev, isFree: Boolean(checked) }))
+              onCheckedChange={(checked) =>
+                setFormData((prev) => ({ ...prev, isFree: checked === true }))
               }
+              className="cursor-pointer"
             />
-            <Label htmlFor="isFree" className='font-medium text-lg'>This is a free event</Label>
+            <Label htmlFor="isFree" className="font-medium text-lg cursor-pointer">
+              This is a free event
+            </Label>
           </div>
 
           {!formData.isFree && (

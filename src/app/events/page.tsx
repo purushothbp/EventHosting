@@ -7,17 +7,20 @@ import "@/models/user";
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/auth';
 type PageProps = {
-  searchParams?: { [key: string]: string | string[] | undefined };
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default async function HomePage({ searchParams = {} }: PageProps) {
+export default async function HomePage({ searchParams }: PageProps) {
+  const resolvedSearchParams = (await searchParams) ?? {};
   await connectToDatabase();
   const now = new Date();
 
-  const scopeRaw = Array.isArray(searchParams.scope) ? searchParams.scope[0] : searchParams.scope;
+  const scopeRaw = Array.isArray(resolvedSearchParams.scope)
+    ? resolvedSearchParams.scope[0]
+    : resolvedSearchParams.scope;
   const scope = (scopeRaw || 'upcoming').toLowerCase();
 
   const session = await getServerSession(authOptions);

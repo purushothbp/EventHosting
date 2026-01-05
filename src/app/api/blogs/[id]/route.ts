@@ -18,7 +18,9 @@ export async function GET(_: Request, { params }: Params) {
       return NextResponse.json({ message: 'Post not found.' }, { status: 404 });
     }
     await connectToDatabase();
-    const post = await BlogPost.findById(params.id).lean().exec();
+    const post = await BlogPost.findById(params.id)
+      .lean<import('@/models/blogPost').IBlogPost & { _id: Types.ObjectId }>()
+      .exec();
     if (!post) {
       return NextResponse.json({ message: 'Post not found.' }, { status: 404 });
     }

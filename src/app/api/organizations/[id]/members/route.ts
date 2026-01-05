@@ -5,6 +5,7 @@ import { connectToDatabase } from '@/app/lib/mongo';
 import { Organization, User } from '@/models';
 import { sendOrgInvitationEmail } from '@/lib/email';
 import crypto from 'crypto';
+import { Types } from 'mongoose';
 
 type Context = {
   params: Promise<{ id: string }>;
@@ -31,7 +32,9 @@ export async function POST(request: Request, context: Context) {
     }
 
     await connectToDatabase();
-    const org = await Organization.findById(id).lean();
+    const org = await Organization.findById(id)
+      .lean<{ _id: Types.ObjectId; name: string }>()
+      .exec();
     if (!org) {
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
     }

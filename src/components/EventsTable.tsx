@@ -7,41 +7,25 @@ import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
 import { IndianRupee } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import '@/styles/ag-theme-custom.css';
+import type { DashboardEvent } from '@/types/events';
 
 
 // Register AG Grid modules
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-interface Event {
-  _id: string;
-  title: string;
-  date: string;
-  location: string;
-  type: string;
-  isFree: boolean;
-  price?: number;
-  minTeamSize: number;
-  maxTeamSize: number;
-  registrationCount?: number;
-  organization?: {
-    _id?: string;
-    name?: string;
-  } | null;
-}
-
 interface EventsTableProps {
-  events: Event[];
+  events: DashboardEvent[];
   loading?: boolean;
   showActions?: boolean;
-  onViewRegistrations?: (event: Event) => void | Promise<void>;
-  onPreviewEvent?: (event: Event) => void;
+  onViewRegistrations?: (event: DashboardEvent) => void | Promise<void>;
+  onPreviewEvent?: (event: DashboardEvent) => void;
 }
 
 export default function EventsTable({ events, loading = false, showActions = false, onViewRegistrations, onPreviewEvent }: EventsTableProps) {
   const router = useRouter();
   
-  const colDefs = useMemo<Array<import('ag-grid-community').ColDef<Event>>>(() => {
-    const cols: Array<import('ag-grid-community').ColDef<Event>> = [
+  const colDefs = useMemo<Array<import('ag-grid-community').ColDef<DashboardEvent>>>(() => {
+    const cols: Array<import('ag-grid-community').ColDef<DashboardEvent>> = [
       { 
         field: 'title',
         headerName: 'Title',
@@ -100,7 +84,7 @@ export default function EventsTable({ events, loading = false, showActions = fal
       {
         field: 'price',
         headerName: 'Price',
-        cellRenderer: (params: import('ag-grid-community').ICellRendererParams<Event>) => {
+        cellRenderer: (params: import('ag-grid-community').ICellRendererParams<DashboardEvent>) => {
           if (!params.data) return null;
           if (params.data.isFree) return 'Free';
           return (
@@ -122,15 +106,16 @@ export default function EventsTable({ events, loading = false, showActions = fal
         headerName: 'Actions',
         colId: 'actions',
         width: 150,
-        cellRenderer: (params: import('ag-grid-community').ICellRendererParams<Event>) => {
-          if (!params.data) return null;
+        cellRenderer: (params: import('ag-grid-community').ICellRendererParams<DashboardEvent>) => {
+          const data = params.data;
+          if (!data) return null;
           return (
             <Button
               variant="secondary"
               size="sm"
-              onClick={(event) => {
-                event.stopPropagation();
-                onViewRegistrations(params.data as Event);
+              onClick={(clickEvent) => {
+                clickEvent.stopPropagation();
+                onViewRegistrations(data);
               }}
             >
               View Registrations

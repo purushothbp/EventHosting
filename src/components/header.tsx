@@ -184,7 +184,7 @@ export default function Header() {
         {/* Desktop Navigation */}
         <div className="mr-4 hidden md:flex items-center">
           <Link href="/" className="mr-6 flex items-center space-x-3 rounded-full border border-white/40 bg-white/70 px-3 py-1.5 shadow-sm backdrop-blur">
-            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-white/40 bg-white/60 shadow">
+            <span className="flex h-9 w-9 items-center justify-center overflow-hidden border border-white/40 bg-white/60">
               {shouldShowOrgLogo ? (
                 <img
                   src={organizationLogo}

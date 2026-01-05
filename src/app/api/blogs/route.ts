@@ -9,8 +9,11 @@ import { Types } from 'mongoose';
 export async function GET() {
   try {
     await connectToDatabase();
-    const posts = await BlogPost.find().sort({ createdAt: -1 }).lean().exec();
-    return NextResponse.json({ posts: posts.map(serializeBlogPost) });
+    const posts = await BlogPost.find()
+      .sort({ createdAt: -1 })
+      .lean<Array<import('@/models/blogPost').IBlogPost & { _id: Types.ObjectId }>>()
+      .exec();
+    return NextResponse.json({ posts: (posts || []).map(serializeBlogPost) });
   } catch (error) {
     console.error('[GET /api/blogs] Error:', error);
     return NextResponse.json(

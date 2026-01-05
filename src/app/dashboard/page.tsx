@@ -19,26 +19,7 @@ import { categorizeEvents } from '@/lib/event-display';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import { useRef } from 'react';
-
-interface DashboardEvent {
-  _id: string;
-  title: string;
-  date: string;
-  location: string;
-  description: string;
-  isFree: boolean;
-  price?: number;
-  type: string;
-  image?: string;
-  imageUrl?: string;
-  organization: {
-    _id?: string;
-    name?: string;
-  } | null;
-  minTeamSize: number;
-  maxTeamSize: number;
-  registrationCount?: number;
-}
+import type { DashboardEvent } from '@/types/events';
 
 interface RegistrationDetail {
   _id: string;
@@ -104,6 +85,7 @@ export default function DashboardPage() {
   const sessionOrgId = sessionUser?.organization;
   const sessionOrgName = sessionUser?.organizationName;
   const effectiveRole = (user?.role || sessionRole || 'user').toLowerCase();
+  console.log(effectiveRole,"zsdcsfasdzfdsasdx")
   const userOrgId = user?.organization || sessionOrgId;
   const resolvedOrgName = (user as any)?.organizationName || sessionOrgName;
   const canManageEvents = ['admin', 'staff', 'coordinator', 'super-admin'].includes(effectiveRole);
@@ -166,7 +148,7 @@ export default function DashboardPage() {
     }
   }, []);
 
-  const handleViewRegistrations = (event: { _id: string; title: string; date: string }) => {
+  const handleViewRegistrations = (event: DashboardEvent) => {
     setSelectedEvent(event);
     setRegistrationsOpen(true);
     loadRegistrations(event._id);
@@ -223,6 +205,10 @@ export default function DashboardPage() {
   const upcomingEvents = events.filter((event) => new Date(event.date) >= now).length;
   const pastEvents = events.filter((event) => new Date(event.date) < now).length;
   const totalRegistrations = events.reduce((sum, evt) => sum + (evt.registrationCount || 0), 0);
+  const inlineEventOrganizationName =
+    typeof inlineEvent?.organization === 'string'
+      ? inlineEvent.organization
+      : inlineEvent?.organization?.name;
 
   return (
     <div className="space-y-8">
@@ -236,35 +222,33 @@ export default function DashboardPage() {
               Your centralized view of events, participation, and certificates.
             </p>
           </div>
-          {!isOrgOverviewRole && (
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="gap-2 border border-white/30 bg-white/70 shadow-sm"
-                onClick={() => setViewMode((prev) => (prev === 'grid' ? 'table' : 'grid'))}
-              >
-                {viewMode === 'grid' ? (
-                  <>
-                    <Rows className="h-4 w-4" /> List View
-                  </>
-                ) : (
-                  <>
-                    <LayoutGrid className="h-4 w-4" /> Grid View
-                  </>
-                )}
-              </Button>
-              {canManageEvents && (
-                <Link href="/events/new">
-                  <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Create Event
-                  </Button>
-                </Link>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="gap-2 border border-white/30 bg-white/70 shadow-sm"
+              onClick={() => setViewMode((prev) => (prev === 'grid' ? 'table' : 'grid'))}
+            >
+              {viewMode === 'grid' ? (
+                <>
+                  <Rows className="h-4 w-4" /> List View
+                </>
+              ) : (
+                <>
+                  <LayoutGrid className="h-4 w-4" /> Grid View
+                </>
               )}
-            </div>
-          )}
+            </Button>
+            {canManageEvents && (
+              <Link href="/events/new">
+                <Button>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Create Event
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
 
         {isOrgOverviewRole && (
@@ -571,8 +555,8 @@ export default function DashboardPage() {
               <p className="text-sm text-muted-foreground">{inlineEvent.description}</p>
               <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                 <Badge variant="secondary">{inlineEvent.type}</Badge>
-                {inlineEvent.organization?.name && (
-                  <Badge variant="outline">{inlineEvent.organization.name}</Badge>
+                {inlineEventOrganizationName && (
+                  <Badge variant="outline">{inlineEventOrganizationName}</Badge>
                 )}
               </div>
               <div className="flex flex-wrap gap-2">
@@ -585,11 +569,7 @@ export default function DashboardPage() {
                 {canManageEvents && (
                   <Button variant="outline" onClick={() => {
                     setInlineEvent(null);
-                    handleViewRegistrations({
-                      _id: inlineEvent._id,
-                      title: inlineEvent.title,
-                      date: inlineEvent.date,
-                    });
+                    handleViewRegistrations(inlineEvent);
                   }}>
                     View registrations
                   </Button>

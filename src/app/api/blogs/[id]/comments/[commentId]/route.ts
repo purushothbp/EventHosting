@@ -5,6 +5,8 @@ import { authOptions } from '@/app/auth';
 import { connectToDatabase } from '@/app/lib/mongo';
 import BlogComment from '@/models/blogComment';
 import BlogPost from '@/models/blogPost';
+import type { HydratedDocument } from 'mongoose';
+import type { IBlogComment } from '@/models/blogComment';
 
 const serializeComment = (comment: any) => ({
   id: comment._id.toString(),
@@ -59,8 +61,11 @@ export async function PATCH(request: Request, { params }: Params) {
       BlogComment.findOne({
         _id: params.commentId,
         blogId: params.id,
-      }).exec(),
-      BlogPost.findById(params.id).select('authorId').lean().exec(),
+      }).exec() as Promise<HydratedDocument<IBlogComment> | null>,
+      BlogPost.findById(params.id)
+        .select('authorId')
+        .lean<{ authorId: Types.ObjectId }>()
+        .exec(),
     ]);
 
     if (!comment) {
@@ -145,8 +150,11 @@ export async function DELETE(_request: Request, { params }: Params) {
       BlogComment.findOne({
         _id: params.commentId,
         blogId: params.id,
-      }).exec(),
-      BlogPost.findById(params.id).select('authorId').lean().exec(),
+      }).exec() as Promise<HydratedDocument<IBlogComment> | null>,
+      BlogPost.findById(params.id)
+        .select('authorId')
+        .lean<{ authorId: Types.ObjectId }>()
+        .exec(),
     ]);
 
     if (!comment) {

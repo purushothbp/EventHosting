@@ -1,11 +1,12 @@
 import { connectToDatabase } from '@/app/lib/mongo';
 import BlogPostModel, { IBlogPost } from '@/models/blogPost';
 import type { BlogPost } from '@/types/blog';
-import { Types, Document } from 'mongoose';
+import { Types, Document, FlattenMaps } from 'mongoose';
 
 type BlogPostSource =
   | (IBlogPost & { _id: Types.ObjectId })
-  | (Omit<IBlogPost, keyof Document> & { _id: Types.ObjectId });
+  | (Omit<IBlogPost, keyof Document> & { _id: Types.ObjectId })
+  | (FlattenMaps<IBlogPost> & { _id: Types.ObjectId });
 
 export function serializeBlogPost(post: BlogPostSource): BlogPost {
   const plain =
@@ -34,9 +35,9 @@ export async function getAllBlogPosts(): Promise<BlogPost[]> {
   await connectToDatabase();
   const posts = await BlogPostModel.find()
     .sort({ createdAt: -1 })
-    .lean()
+    .lean<Array<IBlogPost & { _id: Types.ObjectId }>>()
     .exec();
-  return posts.map(serializeBlogPost);
+  return (posts || []).map(serializeBlogPost);
 }
 
 export async function getBlogPostById(id: string): Promise<BlogPost | null> {
@@ -44,6 +45,8 @@ export async function getBlogPostById(id: string): Promise<BlogPost | null> {
     return null;
   }
   await connectToDatabase();
-  const post = await BlogPostModel.findById(id).lean().exec();
+  const post = await BlogPostModel.findById(id)
+    .lean<IBlogPost & { _id: Types.ObjectId }>()
+    .exec();
   return post ? serializeBlogPost(post) : null;
 }
